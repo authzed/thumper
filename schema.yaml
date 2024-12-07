@@ -1,0 +1,229 @@
+type: object
+additionalProperties: false
+required:
+- name
+- steps
+properties:
+  name:
+    type: string
+  weight:
+    type: integer
+    minimum: 1
+  steps:
+    type: array
+    minItems: 1
+    items:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - resource
+        - permission
+        - subject
+        properties:
+          op:
+            const: "CheckPermission"
+          consistency:
+            $ref: "#/$defs/consistency"
+          resource:
+            $ref: "#/$defs/objectReference"
+          permission:
+            $ref: "#/$defs/permissionName"
+          subject:
+            $ref: "#/$defs/subjectReference"
+          expectNoPermission:
+            type: boolean
+          expectPermissionship:
+            type: string
+            enum:
+            - NO_PERMISSION
+            - HAS_PERMISSION
+            - CONDITIONAL_PERMISSION
+          context:
+            $ref: "#/$defs/caveatContext"
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - resource
+        properties:
+          op:
+            const: "ReadRelationships"
+          consistency:
+            $ref: "#/$defs/consistency"
+          resource:
+            $ref: "#/$defs/objectFilter"
+          permission:
+            $ref: "#/$defs/permissionName"
+          subject:
+            $ref: "#/$defs/subjectReference"
+          numExpected:
+            type: integer
+            minimum: 1
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - resource
+        properties:
+          op:
+            const: "DeleteRelationships"
+          consistency:
+            $ref: "#/$defs/consistency"
+          resource:
+            $ref: "#/$defs/objectFilter"
+          permission:
+            $ref: "#/$defs/permissionName"
+          subject:
+            $ref: "#/$defs/subjectReference"
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - resource
+        - permission
+        properties:
+          op:
+            const: "ExpandPermissionTree"
+          consistency:
+            $ref: "#/$defs/consistency"
+          resource:
+            $ref: "#/$defs/objectReference"
+          permission:
+            $ref: "#/$defs/permissionName"
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - resource
+        - permission
+        - subject
+        properties:
+          op:
+            const: "LookupResources"
+          consistency:
+            $ref: "#/$defs/consistency"
+          resource:
+            $ref: "#/$defs/objectType"
+          permission:
+            $ref: "#/$defs/permissionName"
+          subject:
+            $ref: "#/$defs/subjectReference"
+          numExpected:
+            type: integer
+            minimum: 1
+          context:
+            $ref: "#/$defs/caveatContext"
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - resource
+        - permission
+        - subject
+        properties:
+          op:
+            const: "LookupSubjects"
+          consistency:
+            $ref: "#/$defs/consistency"
+          resource:
+            $ref: "#/$defs/objectReference"
+          permission:
+            $ref: "#/$defs/permissionName"
+          subject:
+            $ref: "#/$defs/objectType"
+          numExpected:
+            type: integer
+            minimum: 1
+          context:
+            $ref: "#/$defs/caveatContext"
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - updates
+        properties:
+          op:
+            const: "WriteRelationships"
+          updates:
+            type: array
+            minItems: 1
+            items:
+              type: object
+              required:
+              - op
+              - resource
+              - relation
+              - subject
+              properties:
+                op:
+                  type: string
+                  enum:
+                  - TOUCH
+                  - CREATE
+                  - DELETE
+                resource:
+                  $ref: "#/$defs/objectReference"
+                relation:
+                  $ref: "#/$defs/permissionName"
+                subject:
+                  $ref: "#/$defs/subjectReference"
+                caveat:
+                  type: object
+                  required:
+                  - name
+                  properties:
+                    name:
+                      type: string
+                    context:
+                      $ref: "#/$defs/caveatContext"
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - resource
+        properties:
+          op:
+            const: "DeleteRelationships"
+          resource:
+            $ref: "#/$defs/objectFilter"
+          permission:
+            $ref: "#/$defs/permissionName"
+          subject:
+            $ref: "#/$defs/subjectReference"
+      - type: object
+        additionalProperties: false
+        required:
+        - op
+        - schema
+        properties:
+          op:
+            const: "WriteSchema"
+          schema:
+            type: string
+$defs:
+  objectReference:
+    type: string
+    pattern: "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]:(([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})|\\*)$"
+  objectType:
+    type: string
+    pattern: "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]$"
+  objectFilter:
+    type: string
+    pattern: "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9](:(([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})|\\*))?$"
+  subjectReference:
+    type: string
+    pattern: "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]:(([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})|\\*)(#[a-z][a-z0-9_]{1,62}[a-z0-9])?$"
+  permissionName:
+    type: string
+    pattern: "^[a-z][a-z0-9_]{1,62}[a-z0-9]$"
+  consistency:
+    type: string
+    enum:
+    - MinimizeLatency
+    - AtExactSnapshot
+    - AtLeastAsFresh
+    - FullyConsistent
+  caveatContext:
+    type: object

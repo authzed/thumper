@@ -1,0 +1,28 @@
+---
+name: scale test
+weight: 1
+steps:
+- op: WriteRelationships
+  updates:
+  - op: TOUCH
+    resource: {{ .Prefix }}organization:org_{{ randomObjectID }}
+    subject: {{ .Prefix }}platform:plat_{{ randomObjectID }}
+    relation: platform
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+    subject: {{ .Prefix }}organization:org_{{ randomObjectID }}
+    relation: organization
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+    subject: {{ .Prefix }}client:client_{{ randomObjectID }}#token
+    relation: writer
+  - op: TOUCH
+    resource: {{ .Prefix }}client:client_{{ randomObjectID }}
+    subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+    relation: token
+{{- range $val := enumerate 100 }}
+- op: CheckPermission
+  resource: {{ $.Prefix }}tenant:ps_{{ randomObjectID }}
+  subject: {{ $.Prefix }}token:t_{{ randomObjectID }}
+  permission: write_relationships
+{{- end }}

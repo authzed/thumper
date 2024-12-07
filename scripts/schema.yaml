@@ -1,0 +1,263 @@
+name: write basic thumper schema
+steps:
+- op: WriteSchema
+  schema: | 
+    definition {{ .Prefix }}resource {
+      relation writer: {{ .Prefix }}user
+      relation reader: {{ .Prefix }}user
+      permission edit = writer
+      permission view = reader + edit
+    }
+
+    /** token represents a single token, assigned to a user or client */
+    definition {{ .Prefix }}token {
+      /** owner is the owner of the token */
+      relation owner: {{ .Prefix }}client | {{ .Prefix }}user
+      permission delete_token = owner + owner->delete_token
+      permission view_token = owner + owner->view_token
+    }
+
+    /** revisionhash represents a revision hash of a schema for a tenant */
+    definition {{ .Prefix }}revisionhash {}
+
+    /**
+    * tenant represents a single tenant (permissions system) in the tenancy layer
+    */
+    definition {{ .Prefix }}tenant {
+      /** organization is the organization that owns the tenant */
+      relation organization: {{ .Prefix }}organization
+
+      /**
+      * current_revision_hash is a link to the hash of the current schema for the tenant
+      */
+      relation current_revision_hash: {{ .Prefix }}revisionhash
+
+      /**
+      * admin is a user or client *token* that has the admin role on the tenant
+      */
+      relation admin: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+
+      /**
+      * writer is a user or client *token* that has the writer role on the tenant
+      */
+      relation writer: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+
+      /**
+      * viewer is a user or client *token* that has the viewer role on the tenant
+      */
+      relation viewer: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+
+      /**
+      * metrics_viewer is the client *token* that has the ability to view metrics for the tenant
+      */
+      relation metrics_viewer: {{ .Prefix }}client#token
+
+      // @deprecated
+      permission write = writer + admin_tenant
+
+      // Tenants
+      permission admin_tenant = admin + organization->admin
+      permission update_tenant_metadata = admin_tenant
+      permission delete_tenant = admin_tenant
+      permission view_tenant = viewer + writer + admin_tenant
+      permission populate_tenant = write_schema & write_relationships
+      permission clone_tenant = read_schema & read_relationships
+
+      // Metrics
+      permission view_metrics = metrics_viewer + view_tenant
+
+      // Schema management
+      permission write_schema = admin_tenant
+      permission read_schema = view_tenant
+
+      // Manage who has access to the tenant
+      permission view_access = admin_tenant
+      permission manage_access = admin_tenant
+
+      // Relationships
+      permission write_relationships = writer + admin_tenant
+      permission delete_relationships = write_relationships
+      permission read_relationships = viewer + write_relationships
+
+      // Permissions
+      permission check_permission = read_relationships
+      permission expand_permission_tree = read_relationships
+      permission lookup_resources = read_relationships
+    }
+
+    /** platform is the root singleton for the tenancy platform */
+    definition {{ .Prefix }}platform {
+      permission create_org = nil
+    }
+
+    /** organization is an organization in the system */
+    definition {{ .Prefix }}organization {
+      /** platform is the singleton platform */
+      relation platform: {{ .Prefix }}platform
+
+      /**
+      * prod_enabled links the organization to its own members, if creation of production tenants is allowed
+      */
+      relation prod_enabled: {{ .Prefix }}organization
+
+      /**
+      * admin is a user or client *token* that has the admin role on the organization
+      */
+      relation admin: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+
+      /**
+      * member is a user or client *token* that is a member of the organization
+      */
+      relation member: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+
+      // Orgs
+      permission admin_org = admin
+      permission delete_org = admin_org
+      permission update_org_metadata = admin_org
+      permission view_org = member + admin_org
+
+      // Access
+      permission change_member_role = admin_org
+      permission invite_member = admin_org
+      permission delete_member = admin_org
+      permission view_members = view_org
+      permission is_member = member + admin
+
+      // Clients
+      permission create_client = admin_org
+
+      // Billing
+      permission request_production_access = admin_org
+      permission request_enhanced_support = admin_org
+      permission manage_billing = admin_org
+      permission view_billing = admin_org
+
+      // Permissions Systems
+      permission create_dev_tenant = admin_org
+      permission create_prod_tenant = prod_enabled->create_dev_tenant
+    }
+
+    /**
+    * namespace represents a single namespace defined in the schema of a tenant
+    */
+    definition {{ .Prefix }}namespace {
+      relation tenant: {{ .Prefix }}tenant
+    }
+
+    // @deprecated
+    definition {{ .Prefix }}flag {
+      relation enabled: {{ .Prefix }}organization
+    }
+
+    /** user represents a user in the tenancy model */
+    definition {{ .Prefix }}user {
+      relation token: {{ .Prefix }}token
+    }
+
+    /** client represents a client in the tenancy model */
+    definition {{ .Prefix }}client {
+      /** org is the organization that owns the client */
+      relation org: {{ .Prefix }}organization
+
+      /** token is a token owned by the client */
+      relation token: {{ .Prefix }}token
+
+      // Clients
+      permission admin_client = org->admin_org
+      permission delete_client = admin_client
+      permission view_client = org->view_org + admin_client
+
+      // Tokens
+      permission create_token = admin_client
+      permission delete_token = admin_client
+      permission view_token = admin_client
+    }
+
+    definition {{ .Prefix }}schemarevision {}
+
+    /** schema represents a single schema for a tenant */
+    definition {{ .Prefix }}schema {
+      relation revision: {{ .Prefix }}schemarevision
+    }
+- op: WriteRelationships
+  updates:
+  - op: TOUCH
+    resource: {{ .Prefix }}resource:firstdoc
+    subject: {{ .Prefix }}user:tom
+    relation: writer
+  - op: TOUCH
+    resource: {{ .Prefix }}resource:firstdoc
+    subject: {{ .Prefix }}user:fred
+    relation: reader
+  - op: TOUCH
+    resource: {{ .Prefix }}resource:seconddoc
+    subject: {{ .Prefix }}user:tom
+    relation: reader
+  - op: TOUCH
+    resource: {{ .Prefix }}organization:firstorg
+    relation: admin
+    subject: {{ .Prefix }}user:fred#token
+  - op: TOUCH
+    resource: {{ .Prefix }}organization:secondorg
+    relation: admin
+    subject: {{ .Prefix }}user:jill#token
+  - op: TOUCH
+    resource: {{ .Prefix }}organization:secondorg
+    relation: member
+    subject: {{ .Prefix }}user:tom#token
+  - op: TOUCH
+    resource: {{ .Prefix }}organization:firstorg
+    relation: prod_enabled
+    subject: {{ .Prefix }}organization:firstorg
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:firsttenant
+    relation: organization
+    subject: {{ .Prefix }}organization:firstorg
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:secondtenant
+    relation: organization
+    subject: {{ .Prefix }}organization:secondorg
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:thirdtenant
+    relation: organization
+    subject: {{ .Prefix }}organization:secondorg
+  - op: TOUCH
+    resource: {{ .Prefix }}client:writerclient
+    relation: org
+    subject: {{ .Prefix }}organization:firstorg
+  - op: TOUCH
+    resource: {{ .Prefix }}client:writerclient
+    relation: token
+    subject: {{ .Prefix }}token:apptoken
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:firsttenant
+    relation: writer
+    subject: {{ .Prefix }}client:writerclient#token
+  - op: TOUCH
+    resource: {{ .Prefix }}token:apptoken
+    relation: owner
+    subject: {{ .Prefix }}client:writerclient
+  - op: TOUCH
+    resource: {{ .Prefix }}client:readclient
+    relation: org
+    subject: {{ .Prefix }}organization:secondorg
+  - op: TOUCH
+    resource: {{ .Prefix }}client:readclient
+    relation: token
+    subject: {{ .Prefix }}token:readertoken
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:secondtenant
+    relation: viewer
+    subject: {{ .Prefix }}client:readclient#token
+  - op: TOUCH
+    resource: {{ .Prefix }}token:readertoken
+    relation: owner
+    subject: {{ .Prefix }}client:readclient
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:thirdtenant
+    relation: admin
+    subject: {{ .Prefix }}user:sandra#token
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:thirdtenant
+    relation: viewer
+    subject: {{ .Prefix }}user:mike#token

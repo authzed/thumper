@@ -1,0 +1,74 @@
+name: create org, tenant, and add client
+weight: 1
+steps:
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+  subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+  permission: write_relationships
+  expectNoPermission: true
+  consistency: AtLeastAsFresh
+- op: LookupResources
+  resource: {{ .Prefix }}tenant
+  permission: view_tenant
+  subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+  numExpected: 0
+  consistency: AtLeastAsFresh
+- op: WriteRelationships
+  updates:
+  - op: TOUCH
+    resource: {{ .Prefix }}organization:org_{{ randomObjectID }}
+    subject: {{ .Prefix }}platform:plat_{{ randomObjectID }}
+    relation: platform
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+    subject: {{ .Prefix }}organization:org_{{ randomObjectID }}
+    relation: organization
+  - op: TOUCH
+    resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+    subject: {{ .Prefix }}client:client_{{ randomObjectID }}#token
+    relation: writer
+  - op: TOUCH
+    resource: {{ .Prefix }}client:client_{{ randomObjectID }}
+    subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+    relation: token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+  subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+  permission: write_relationships
+  consistency: AtLeastAsFresh
+- op: LookupResources
+  resource: {{ .Prefix }}tenant
+  permission: view_tenant
+  subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+  numExpected: 1
+  consistency: AtLeastAsFresh
+- op: WriteRelationships
+  updates:
+  - op: DELETE
+    resource: {{ .Prefix }}organization:org_{{ randomObjectID }}
+    subject: {{ .Prefix }}platform:plat_{{ randomObjectID }}
+    relation: platform
+  - op: DELETE
+    resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+    subject: {{ .Prefix }}organization:org_{{ randomObjectID }}
+    relation: organization
+  - op: DELETE
+    resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+    subject: {{ .Prefix }}client:client_{{ randomObjectID }}#token
+    relation: writer
+  - op: DELETE
+    resource: {{ .Prefix }}client:client_{{ randomObjectID }}
+    subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+    relation: token
+- op: LookupResources
+  resource: {{ .Prefix }}tenant
+  permission: view_tenant
+  subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+  numExpected: 0
+  consistency: AtLeastAsFresh
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:ps_{{ randomObjectID }}
+  subject: {{ .Prefix }}token:t_{{ randomObjectID }}
+  permission: write_relationships
+  expectNoPermission: true
+  consistency: AtLeastAsFresh

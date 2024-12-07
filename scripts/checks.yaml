@@ -1,0 +1,623 @@
+name: tenancy checks
+weight: 1
+steps:
+- op: CheckPermission
+  resource: {{ .Prefix }}client:readclient
+  permission: admin_client
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:readclient
+  permission: create_token
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:readclient
+  permission: delete_client
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:readclient
+  permission: delete_token
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:readclient
+  permission: view_client
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:readclient
+  permission: view_client
+  subject: {{ .Prefix }}user:tom#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:readclient
+  permission: view_token
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:writerclient
+  permission: admin_client
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:writerclient
+  permission: create_token
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:writerclient
+  permission: delete_client
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:writerclient
+  permission: delete_token
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:writerclient
+  permission: view_client
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}client:writerclient
+  permission: view_token
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: admin_org
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: change_member_role
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: create_client
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: create_dev_tenant
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: create_prod_tenant
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: delete_member
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: delete_org
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: invite_member
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: manage_billing
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: request_enhanced_support
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: request_production_access
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: update_org_metadata
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: view_billing
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: view_members
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:firstorg
+  permission: view_org
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: admin_org
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: change_member_role
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: create_client
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: create_dev_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: delete_member
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: delete_org
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: invite_member
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: manage_billing
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: request_enhanced_support
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: request_production_access
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: update_org_metadata
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: view_billing
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: view_members
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: view_members
+  subject: {{ .Prefix }}user:tom#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: view_org
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}organization:secondorg
+  permission: view_org
+  subject: {{ .Prefix }}user:tom#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: admin_tenant
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: check_permission
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: check_permission
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: check_permission
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: delete_relationships
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: delete_relationships
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: delete_relationships
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: delete_tenant
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: manage_access
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: populate_tenant
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: read_relationships
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: read_relationships
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: read_relationships
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: read_schema
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: read_schema
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: read_schema
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: update_tenant_metadata
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: view_access
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: view_tenant
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: view_tenant
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: view_tenant
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: write_relationships
+  subject: {{ .Prefix }}client:writerclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: write_relationships
+  subject: {{ .Prefix }}token:apptoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: write_relationships
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:firsttenant
+  permission: write_schema
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: admin_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: check_permission
+  subject: {{ .Prefix }}client:readclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: check_permission
+  subject: {{ .Prefix }}token:readertoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: check_permission
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}client:readclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}token:readertoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: delete_relationships
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: delete_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}client:readclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}token:readertoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}client:readclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}token:readertoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: manage_access
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: populate_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: read_relationships
+  subject: {{ .Prefix }}client:readclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: read_relationships
+  subject: {{ .Prefix }}token:readertoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: read_relationships
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: read_schema
+  subject: {{ .Prefix }}client:readclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: read_schema
+  subject: {{ .Prefix }}token:readertoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: read_schema
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: update_tenant_metadata
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: view_access
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: view_tenant
+  subject: {{ .Prefix }}client:readclient#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: view_tenant
+  subject: {{ .Prefix }}token:readertoken
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: view_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: write_relationships
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:secondtenant
+  permission: write_schema
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: admin_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: admin_tenant
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: check_permission
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: check_permission
+  subject: {{ .Prefix }}user:mike#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: check_permission
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}user:mike#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: clone_tenant
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: delete_relationships
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: delete_relationships
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: delete_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: delete_tenant
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}user:mike#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: expand_permission_tree
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}user:mike#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: lookup_resources
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: manage_access
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: manage_access
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: populate_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: populate_tenant
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: read_relationships
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: read_relationships
+  subject: {{ .Prefix }}user:mike#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: read_relationships
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: read_schema
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: read_schema
+  subject: {{ .Prefix }}user:mike#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: read_schema
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: update_tenant_metadata
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: update_tenant_metadata
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: view_access
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: view_access
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: view_tenant
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: view_tenant
+  subject: {{ .Prefix }}user:mike#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: view_tenant
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: write_relationships
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: write_relationships
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: write_schema
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}tenant:thirdtenant
+  permission: write_schema
+  subject: {{ .Prefix }}user:sandra#token
+- op: CheckPermission
+  resource: {{ .Prefix }}token:apptoken
+  permission: delete_token
+  subject: {{ .Prefix }}client:writerclient
+- op: CheckPermission
+  resource: {{ .Prefix }}token:apptoken
+  permission: delete_token
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}token:apptoken
+  permission: view_token
+  subject: {{ .Prefix }}client:writerclient
+- op: CheckPermission
+  resource: {{ .Prefix }}token:apptoken
+  permission: view_token
+  subject: {{ .Prefix }}user:fred#token
+- op: CheckPermission
+  resource: {{ .Prefix }}token:readertoken
+  permission: delete_token
+  subject: {{ .Prefix }}client:readclient
+- op: CheckPermission
+  resource: {{ .Prefix }}token:readertoken
+  permission: delete_token
+  subject: {{ .Prefix }}user:jill#token
+- op: CheckPermission
+  resource: {{ .Prefix }}token:readertoken
+  permission: view_token
+  subject: {{ .Prefix }}client:readclient
+- op: CheckPermission
+  resource: {{ .Prefix }}token:readertoken
+  permission: view_token
+  subject: {{ .Prefix }}user:jill#token

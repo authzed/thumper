@@ -1,0 +1,92 @@
+{{- if .IsMigration }}
+---
+name: write schema
+steps:
+- op: WriteSchema
+  schema: |
+    definition {{ $.Prefix }}user {}
+
+    /**
+    * only allowed on tuesdays. `day_of_week` can be provided either at the time
+    * the relationship is written, or in the CheckPermission API call.
+    */
+    caveat {{ $.Prefix }}only_on_tuesday(day_of_week string) {
+      day_of_week == 'tuesday'
+    }
+
+    definition {{ $.Prefix }}document {
+        /**
+        * reader indicates that the user is a reader on the document, either directly
+        * or only on tuesday.
+        */
+        relation caveated_reader: {{ $.Prefix }}user with {{ $.Prefix }}only_on_tuesday
+        relation reader: {{ $.Prefix }}user
+
+        permission view = reader + caveated_reader
+    }
+- op: WriteRelationships
+  updates:
+  - op: TOUCH
+    resource: {{ $.Prefix }}document:a
+    subject: {{ $.Prefix }}user:a_reader
+    relation: reader
+  - op: TOUCH
+    resource: {{ $.Prefix }}document:a
+    subject: {{ $.Prefix }}user:caveated_reader
+    relation: caveated_reader
+    caveat:
+      name: {{ $.Prefix }}only_on_tuesday
+  - op: TOUCH
+    resource: {{ $.Prefix }}document:a
+    subject: {{ $.Prefix }}user:caveated_reader_wrong_day
+    relation: caveated_reader
+    caveat:
+      name: {{ $.Prefix }}only_on_tuesday
+      context:
+        day_of_week: friday
+  - op: TOUCH
+    resource: {{ $.Prefix }}document:a
+    subject: {{ $.Prefix }}user:caveated_reader_right_day
+    relation: caveated_reader
+    caveat:
+      name: {{ $.Prefix }}only_on_tuesday
+      context:
+        day_of_week: tuesday
+  
+{{- else }}
+name: caveat checks
+weight: 1
+steps:
+- op: CheckPermission
+  resource: {{ $.Prefix }}document:a
+  permission: view
+  subject: {{ .Prefix }}user:a_reader
+- op: CheckPermission
+  resource: {{ $.Prefix }}document:a
+  permission: view
+  subject: {{ .Prefix }}user:caveated_reader
+  context:
+    day_of_week: tuesday
+  expectPermission: HAS_PERMISSION
+- op: CheckPermission
+  resource: {{ $.Prefix }}document:a
+  permission: view
+  subject: {{ .Prefix }}user:caveated_reader_wrong_day
+  expectNoPermission: true
+- op: CheckPermission
+  resource: {{ $.Prefix }}document:a
+  permission: view
+  subject: {{ .Prefix }}user:caveated_reader_right_day
+- op: CheckPermission
+  resource: {{ $.Prefix }}document:a
+  permission: view
+  subject: {{ .Prefix }}user:caveated_reader_wrong_day
+  context:
+    day_of_week: tuesday
+  expectPermissionship: NO_PERMISSION
+- op: CheckPermission
+  resource: {{ $.Prefix }}document:a
+  permission: view
+  subject: {{ .Prefix }}user:caveated_reader
+  expectPermissionship: CONDITIONAL_PERMISSION
+{{- end }}

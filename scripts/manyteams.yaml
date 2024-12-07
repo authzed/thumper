@@ -1,0 +1,101 @@
+{{- if .IsMigration }}
+name: write many teams
+steps:
+- op: WriteSchema
+  schema: |
+    definition {{ .Prefix }}user {}
+
+    definition {{ .Prefix }}repo {
+        relation manager: {{ .Prefix }}user | {{ .Prefix }}team#member | {{ .Prefix }}team#manager
+        relation viewer: {{ .Prefix }}user | {{ .Prefix }}team#member | {{ .Prefix }}team#manager
+
+        permission manage = manager
+        permission view = viewer + manager
+    }
+
+    definition {{ .Prefix }}team {
+        relation manager: {{ .Prefix }}user | {{ .Prefix }}team#member | {{ .Prefix }}team#manager
+        relation direct_member: {{ .Prefix }}user | {{ .Prefix }}team#member | {{ .Prefix }}team#manager
+
+        permission member = direct_member + manager
+    }
+
+    definition {{ .Prefix }}organization {
+        relation group: {{ .Prefix }}team
+        relation administrator: {{ .Prefix }}user | {{ .Prefix }}team#member | {{ .Prefix }}team#manager
+        relation direct_member: {{ .Prefix }}user
+
+        relation repo: {{ .Prefix }}repo
+
+        permission admin = administrator
+        permission member = direct_member + administrator + group->member
+    }
+- op: WriteRelationships
+  updates:
+  - op: TOUCH
+    resource: {{ $.Prefix }}organization:codehosting
+    subject: {{ $.Prefix }}team:engineering
+    relation: group
+
+{{- range $productarea := enumerate 200}}
+- op: WriteRelationships
+  updates:
+  - op: TOUCH
+    resource: {{ $.Prefix }}organization:codehosting
+    subject: {{ $.Prefix }}team:pa_{{ $productarea }}
+    relation: group
+  - op: TOUCH
+    resource: {{ $.Prefix }}team:engineering
+    subject: {{ $.Prefix }}team:pa_{{ $productarea }}#member
+    relation: direct_member
+{{- range $team := enumerate 50 }}
+  - op: TOUCH
+    resource: {{ $.Prefix }}organization:codehosting
+    subject: {{ $.Prefix }}team:pa_{{ $productarea }}_t{{ $team }}
+    relation: group
+  - op: TOUCH
+    resource: {{ $.Prefix }}team:pa_{{ $productarea }}
+    subject: {{ $.Prefix }}team:pa_{{ $productarea }}_t{{ $team }}#member
+    relation: direct_member
+  - op: TOUCH
+    resource: {{ $.Prefix }}organization:codehosting
+    subject: {{ $.Prefix }}repo:pa_{{ $productarea }}_t{{ $team }}
+    relation: repo
+  - op: TOUCH
+    resource: {{ $.Prefix }}repo:pa_{{ $productarea }}_t{{ $team }}
+    subject: {{ $.Prefix }}team:pa_{{ $productarea }}_t{{ $team }}#member
+    relation: manager
+  - op: TOUCH
+    resource: {{ $.Prefix }}repo:pa_{{ $productarea }}_t{{ $team }}
+    subject: {{ $.Prefix }}team:engineering#member
+    relation: viewer
+{{- range $user := enumerate 10 }}
+  - op: TOUCH
+    resource: {{ $.Prefix }}team:pa_{{ $productarea }}_t{{ $team }}
+    subject: {{ $.Prefix }}user:pa_{{ $productarea }}_t{{ $team }}_u{{ $user }}
+    relation: direct_member
+  - op: TOUCH
+    resource: {{ $.Prefix }}organization:codehosting
+    subject: {{ $.Prefix }}user:pa_{{ $productarea }}_t{{ $team }}_u{{ $user }}
+    relation: direct_member
+{{- end }}  
+{{- end }}
+{{- end }}
+{{- else }}
+
+{{- range $productarea := enumerate 200}}
+---
+name: check product area {{ $productarea }}
+weight: 1
+steps:
+- op: CheckPermission
+  resource: {{ $.Prefix }}repo:pa_{{ $productarea }}_t0
+  permission: view
+  subject: {{ $.Prefix }}user:pa_{{ $productarea }}_t0_u0
+- op: CheckPermission
+  resource: {{ $.Prefix }}repo:pa_{{ $productarea }}_t1
+  permission: view
+  subject: {{ $.Prefix }}user:pa_{{ $productarea }}_t0_u0
+  expectNoPermission: true
+{{- end }}
+{{- end }}

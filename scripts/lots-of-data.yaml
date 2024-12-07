@@ -1,0 +1,25 @@
+name: load a lot of data
+weight: 1
+steps:
+{{- range $j := enumerate 10000 }}
+- op: WriteRelationships
+  updates:
+  - op: TOUCH
+    resource: {{ $.Prefix }}organization:org_{{ $j }}
+    subject: {{ $.Prefix }}platform:plat_{{ $j }}
+    relation: platform
+  - op: TOUCH
+    resource: {{ $.Prefix }}tenant:ps_{{ $j }}
+    subject: {{ $.Prefix }}organization:org_{{ $j }}
+    relation: organization
+  - op: TOUCH
+    resource: {{ $.Prefix }}tenant:ps_{{ $j }}
+    subject: {{ $.Prefix }}client:client_{{ $j }}#token
+    relation: writer
+{{- range $i := enumerate 1000 }}
+  - op: TOUCH
+    resource: {{ $.Prefix }}client:client_{{ $j }}
+    subject: {{ $.Prefix }}token:t_{{ $j }}{{ $i }}
+    relation: token
+{{- end }}
+{{- end }}
