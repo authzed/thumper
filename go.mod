@@ -9,7 +9,6 @@ require (
 	github.com/authzed/authzed-go v1.1.1
 	github.com/authzed/grpcutil v0.0.0-20230908193239-4286bb1d6403
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/jzelinskie/cobrautil v0.0.12
 	github.com/mroth/weightedrand v1.0.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/rs/zerolog v1.33.0
@@ -40,6 +39,8 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/jzelinskie/cobrautil/v2 v2.0.0-20240819150235-f7fe73942d0f // indirect
 	github.com/jzelinskie/stringz v0.0.3 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
