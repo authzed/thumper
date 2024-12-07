@@ -8,7 +8,8 @@ import (
 	"github.com/authzed/internal/thumper/internal/cmd"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/jzelinskie/cobrautil"
+	"github.com/jzelinskie/cobrautil/v2"
+	"github.com/jzelinskie/cobrautil/v2/cobrazerolog"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,7 @@ var buckets = []float64{.006, .010, .018, .024, .032, .042, .056, .075, .100, .1
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	// GCP stackdriver compatible logs
+	zl := cobrazerolog.New(cobrazerolog.WithPreRunLevel(zerolog.DebugLevel))
 	zerolog.LevelFieldName = "severity"
 	grpc_prometheus.EnableClientHandlingTimeHistogram(grpc_prometheus.WithHistogramBuckets(buckets))
 
@@ -28,7 +30,7 @@ func main() {
 		PersistentPreRunE: cmd.SyncFlagsCmdFunc,
 	}
 
-	cobrautil.RegisterZeroLogFlags(rootCmd.PersistentFlags(), "log")
+	zl.RegisterFlags(rootCmd.PersistentFlags())
 
 	rootCmd.PersistentFlags().String("permissions-system", "thumper", "permissions system to query")
 	rootCmd.PersistentFlags().String("endpoint", "localhost:50051", "authzed gRPC API endpoint")
