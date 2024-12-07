@@ -1,9 +1,7 @@
 package main
 
 import (
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/authzed/internal/thumper/internal/cmd"
 
@@ -17,7 +15,6 @@ import (
 var buckets = []float64{.006, .010, .018, .024, .032, .042, .056, .075, .100, .178, .316, .562, 1.000}
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
 	// GCP stackdriver compatible logs
 	zl := cobrazerolog.New(cobrazerolog.WithPreRunLevel(zerolog.DebugLevel))
 	zerolog.LevelFieldName = "severity"

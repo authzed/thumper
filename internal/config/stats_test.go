@@ -142,10 +142,9 @@ func TestStats(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		require := require.New(t)
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			actual := Stats(tc.scripts)
-			require.InDeltaMapValues(tc.expected, actual, .001)
+			require.InDeltaMapValues(t, tc.expected, actual, .001)
 		})
 	}
 }

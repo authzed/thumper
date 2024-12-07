@@ -134,7 +134,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			RelationshipFilter: filter,
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client *authzed.Client, _ *v1.ZedToken) (*v1.ZedToken, error) {
 			resp, err := client.DeleteRelationships(ctx, req)
 			if err != nil {
 				return nil, err
@@ -214,7 +214,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			Updates: updates,
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client *authzed.Client, _ *v1.ZedToken) (*v1.ZedToken, error) {
 			resp, err := client.WriteRelationships(ctx, req)
 			if err != nil {
 				return nil, err
@@ -253,7 +253,7 @@ var minimizeLatency = &v1.Consistency{
 func prepareConsistency(step config.ScriptStep) (consistencyFunc, string, error) {
 	switch step.Consistency {
 	case "", "MinimizeLatency":
-		return func(zt *v1.ZedToken) *v1.Consistency {
+		return func(_ *v1.ZedToken) *v1.Consistency {
 			return minimizeLatency
 		}, "MinimizeLatency", nil
 	case "AtLeastAsFresh":
@@ -279,7 +279,7 @@ func prepareConsistency(step config.ScriptStep) (consistencyFunc, string, error)
 			return fullConsistency
 		}, step.Consistency, nil
 	case "FullyConsistent":
-		return func(zt *v1.ZedToken) *v1.Consistency {
+		return func(_ *v1.ZedToken) *v1.Consistency {
 			return fullConsistency
 		}, step.Consistency, nil
 

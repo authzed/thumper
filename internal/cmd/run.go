@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -26,10 +25,6 @@ var (
 		cobrahttp.WithDefaultEnabled(true),
 		cobrahttp.WithHandler(promhttp.Handler()))
 )
-
-func init() {
-	rand.Seed(time.Now().Unix())
-}
 
 func RegisterRunFlags(cmd *cobra.Command) {
 	cmd.Flags().Int("qps", 1, "QPS with which to call authzed")

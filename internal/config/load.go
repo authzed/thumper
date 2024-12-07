@@ -10,6 +10,7 @@ import (
 	"path"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/ccoveille/go-safecast"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
@@ -23,7 +24,12 @@ func Load(filename string, vars ScriptVariables) ([]*Script, bool, error) {
 		"enumerate": func(count uint) []uint {
 			indices := make([]uint, count)
 			for i := range indices {
-				indices[i] = uint(i)
+				// NOTE: This is technically safe because range
+				// is always nonnegative, but gosec doesn't know
+				// that yet.
+				// TODO: remove this when gosec catches up
+				index, _ := safecast.ToUint(i)
+				indices[i] = index
 			}
 			return indices
 		},
