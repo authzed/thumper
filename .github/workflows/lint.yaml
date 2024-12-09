@@ -32,6 +32,9 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v4"
+      - uses: "authzed/actions/setup-go@main"
+      # Run the build so that trivy has something to analyze
+      - uses: "authzed/actions/go-build@main"
       - uses: "aquasecurity/trivy-action@master"
         with:
           scan-type: "fs"
