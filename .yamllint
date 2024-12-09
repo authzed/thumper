@@ -5,6 +5,9 @@ yaml-files:
   - "*.yml"
   - ".yamllint"
 extends: "default"
+ignore: |
+  scripts
+  schema.yaml
 rules:
   quoted-strings: "enable"
   line-length: "disable"
