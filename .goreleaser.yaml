@@ -7,9 +7,9 @@
 version: 2
 
 builds:
-  - id: main-build
+  - id: "main-build"
     env:
-      - CGO_ENABLED=0
+      - "CGO_ENABLED=0"
     goos:
       - "linux"
       - "darwin"
@@ -17,28 +17,28 @@ builds:
       - "amd64"
       - "arm64"
     main: "./cmd/thumper/"
-    dir: .
+    dir: "."
 
 kos:
   - &ko-defaults
-    id: dockerhub-ko
-    build: main-build
+    id: "dockerhub-ko"
+    build: "main-build"
     platforms:
-      - linux/amd64
-      - linux/arm64
-      - darwin/amd64
-      - darwin/arm64
+      - "linux/amd64"
+      - "linux/arm64"
+      - "darwin/amd64"
+      - "darwin/arm64"
     # TODO: extend this to other repos
     repository: "authzed/zed"
     tags:
-      - latest
+      - "latest"
       - "v{{ .Version }}"
-    sbom: none
+    sbom: "none"
   - <<: *ko-defaults
-    id: ghcr-build
+    id: "ghcr-build"
     repository: "ghcr.io/authzed/zed"
   - <<: *ko-defaults
-    id: quay-build
+    id: "quay-build"
     repository: "quay.io/authzed/zed"
 
 archives:

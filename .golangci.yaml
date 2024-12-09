@@ -8,7 +8,7 @@ linters-settings:
     local-prefixes: "github.com/authzed/thumper"
   gosec:
     excludes:
-      - "G404" # Allow the usage of math/rand
+      - "G404"  # Allow the usage of math/rand
 linters:
   enable:
     - "bidichk"
