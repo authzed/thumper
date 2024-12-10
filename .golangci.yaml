@@ -8,12 +8,11 @@ linters-settings:
     local-prefixes: "github.com/authzed/thumper"
   gosec:
     excludes:
-      - "G404" # Allow the usage of math/rand
+      - "G404"  # Allow the usage of math/rand
 linters:
   enable:
     - "bidichk"
     - "bodyclose"
-    - "deadcode"
     - "errcheck"
     - "errname"
     - "errorlint"
@@ -23,7 +22,6 @@ linters:
     - "gosec"
     - "gosimple"
     - "govet"
-    - "ifshort"
     - "importas"
     - "ineffassign"
     - "makezero"
@@ -33,12 +31,10 @@ linters:
     - "revive"
     - "rowserrcheck"
     - "staticcheck"
-    - "structcheck"
     - "stylecheck"
     - "tenv"
     - "typecheck"
     - "unconvert"
     - "unused"
-    - "varcheck"
     - "wastedassign"
     - "whitespace"

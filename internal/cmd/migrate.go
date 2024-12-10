@@ -9,7 +9,7 @@ import (
 	"github.com/authzed/authzed-go/v1"
 	"github.com/authzed/grpcutil"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/jzelinskie/cobrautil"
+	"github.com/jzelinskie/cobrautil/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -30,7 +30,7 @@ var MigrateCmd = &cobra.Command{
 		THUMPER_TOKEN=testtesttesttest thumper migrate ./scripts/schema.yaml
 	`,
 	Args: cobra.MinimumNArgs(1),
-	RunE: cobrautil.CommandStack(LogCmdFunc, migrateCmdFunc),
+	RunE: migrateCmdFunc,
 }
 
 func migrateCmdFunc(cmd *cobra.Command, args []string) error {

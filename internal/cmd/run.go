@@ -2,34 +2,37 @@ package cmd
 
 import (
 	"fmt"
-	"math/rand"
 	"sync"
 	"time"
 
 	thumperconf "github.com/authzed/internal/thumper/internal/config"
 	"github.com/authzed/internal/thumper/internal/thumperrunner"
 
-	"github.com/jzelinskie/cobrautil"
+	"github.com/jzelinskie/cobrautil/v2"
+	"github.com/jzelinskie/cobrautil/v2/cobrahttp"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
 var (
 	SyncFlagsCmdFunc = cobrautil.SyncViperPreRunE("THUMPER")
-	LogCmdFunc       = cobrautil.ZeroLogRunE("log", zerolog.DebugLevel)
+	// TODO: this seems weird, but I'm not sure where to initialize it such that
+	// it's accessible when setting up flags and also when initializing the command
+	MetricsServerBuilder = cobrahttp.New("metrics",
+		cobrahttp.WithDefaultAddress(":9090"),
+		cobrahttp.WithFlagPrefix("metrics"),
+		cobrahttp.WithDefaultEnabled(true),
+		cobrahttp.WithHandler(promhttp.Handler()))
 )
-
-func init() {
-	rand.Seed(time.Now().Unix())
-}
 
 func RegisterRunFlags(cmd *cobra.Command) {
 	cmd.Flags().Int("qps", 1, "QPS with which to call authzed")
 	cmd.Flags().Duration("step-timeout", 500*time.Millisecond, "maximum time a single step is allowed to run")
 	cmd.Flags().Bool("randomize-starting-step", false, "randomize the starting script step for each worker")
-	cobrautil.RegisterHTTPServerFlags(cmd.Flags(), "metrics", "metrics", ":9090", true)
+
+	// Register http flags
+	MetricsServerBuilder.RegisterFlags(cmd.Flags())
 }
 
 var RunCmd = &cobra.Command{
@@ -46,7 +49,7 @@ var RunCmd = &cobra.Command{
 		THUMPER_TOKEN=testtesttesttest thumper run ./scripts/script.yaml
 	`,
 	Args: cobra.MinimumNArgs(1),
-	RunE: cobrautil.CommandStack(LogCmdFunc, runCmdFunc),
+	RunE: runCmdFunc,
 }
 
 func runCmdFunc(cmd *cobra.Command, args []string) error {
@@ -130,10 +133,9 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	}
 
 	// Start the metrics endpoint.
-	metricsSrv := cobrautil.HTTPServerFromFlags(cmd, "metrics")
-	metricsSrv.Handler = promhttp.Handler()
+	metricsSrv := MetricsServerBuilder.ServerFromFlags(cmd)
 	go func() {
-		if err := cobrautil.HTTPListenFromFlags(cmd, "metrics", metricsSrv, zerolog.InfoLevel); err != nil {
+		if err := MetricsServerBuilder.ListenFromFlags(cmd, metricsSrv); err != nil {
 			log.Fatal().Err(err).Msg("failed while serving metrics")
 		}
 	}()

@@ -1,0 +1,67 @@
+---
+name: "Lint"
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches: ["*"]
+  merge_group:
+    types:
+      - "checks_requested"
+jobs:
+  go-lint:
+    name: "Lint Go"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+      - uses: "authzed/actions/setup-go@main"
+      - uses: "authzed/actions/gofumpt@main"
+      - uses: "authzed/actions/go-mod-tidy@main"
+      - uses: "authzed/actions/go-generate@main"
+      - uses: "authzed/actions/golangci-lint@main"
+
+  extra-lint:
+    name: "Lint YAML & Markdown"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+      - uses: "authzed/actions/yaml-lint@main"
+      - uses: "authzed/actions/markdown-lint@main"
+
+  # TODO: where is the build for this happening?
+  trivy-fs:
+    name: "Analyze FS with Trivy"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+      - uses: "authzed/actions/setup-go@main"
+      # Run the build so that trivy has something to analyze
+      - uses: "authzed/actions/go-build@main"
+      - uses: "aquasecurity/trivy-action@master"
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          format: "table"
+          exit-code: "1"
+          severity: "CRITICAL,HIGH,MEDIUM"
+        env:
+          TRIVY_DB_REPOSITORY: "public.ecr.aws/aquasecurity/trivy-db"
+          TRIVY_JAVA_DB_REPOSITORY: "public.ecr.aws/aquasecurity/trivy-java-db"
+
+  trivy-image:
+    name: "Analyze Release Image with Trivy"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+      - uses: "authzed/actions/setup-go@main"
+      - uses: "goreleaser/goreleaser-action@v6"
+        id: "goreleaser"
+        with:
+          distribution: "goreleaser-pro"
+          version: "2.4.8"
+          args: "release --clean --split --snapshot --single-target"
+        env:
+          GORELEASER_KEY: "${{ secrets.GORELEASER_KEY }}"
+      - name: "Obtain container image to scan"
+        run: |
+          echo "IMAGE_NAME=$(jq '.[] | select(.extra.ID == "dockerhub-ko") | .path' dist/linux_amd64_v1/artifacts.json --raw-output)" >> $GITHUB_ENV
+      - name: "run trivy on release image"
+        run: "docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --format table --exit-code 1 --ignore-unfixed --vuln-type os,library --no-progress --severity CRITICAL,HIGH,MEDIUM ${{ env.IMAGE_NAME }} --db-repository public.ecr.aws/aquasecurity/trivy-db --java-db-repository public.ecr.aws/aquasecurity/trivy-java-db"

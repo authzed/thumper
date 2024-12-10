@@ -1,0 +1,54 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+# yaml-language-server: $schema=https://goreleaser.com/static/schema-pro.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+---
+version: 2
+
+builds:
+  - id: "main-build"
+    env:
+      - "CGO_ENABLED=0"
+    goos:
+      - "linux"
+      - "darwin"
+    goarch:
+      - "amd64"
+      - "arm64"
+    main: "./cmd/thumper/"
+    dir: "."
+
+kos:
+  - &ko-defaults
+    id: "dockerhub-ko"
+    build: "main-build"
+    platforms:
+      - "linux/amd64"
+      - "linux/arm64"
+      - "darwin/amd64"
+      - "darwin/arm64"
+    # TODO: extend this to other repos
+    repository: "authzed/zed"
+    tags:
+      - "latest"
+      - "v{{ .Version }}"
+    sbom: "none"
+  - <<: *ko-defaults
+    id: "ghcr-build"
+    repository: "ghcr.io/authzed/zed"
+  - <<: *ko-defaults
+    id: "quay-build"
+    repository: "quay.io/authzed/zed"
+
+archives:
+  - id: "main-archive"
+    builds:
+      - "main-build"
+
+changelog:
+  use: "github-native"
+  sort: "asc"
+
+checksum:
+  name_template: "checksums.txt"
