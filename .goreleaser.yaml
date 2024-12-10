@@ -28,12 +28,14 @@ kos:
       - "linux/arm64"
       - "darwin/amd64"
       - "darwin/arm64"
-    # TODO: extend this to other repos
     repository: "authzed/zed"
     tags:
       - "latest"
       - "v{{ .Version }}"
     sbom: "none"
+    # This prevents it from adding the md5sum after the name of
+    # the image
+    base_import_paths: true
   - <<: *ko-defaults
     id: "ghcr-build"
     repository: "ghcr.io/authzed/zed"
