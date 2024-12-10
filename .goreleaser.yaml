@@ -28,7 +28,7 @@ kos:
       - "linux/arm64"
       - "darwin/amd64"
       - "darwin/arm64"
-    repository: "authzed/zed"
+    repository: "authzed"
     tags:
       - "latest"
       - "v{{ .Version }}"
@@ -38,10 +38,10 @@ kos:
     base_import_paths: true
   - <<: *ko-defaults
     id: "ghcr-build"
-    repository: "ghcr.io/authzed/zed"
+    repository: "ghcr.io/authzed"
   - <<: *ko-defaults
     id: "quay-build"
-    repository: "quay.io/authzed/zed"
+    repository: "quay.io/authzed"
 
 archives:
   - id: "main-archive"
