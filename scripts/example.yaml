@@ -1,67 +1,68 @@
-name: check
+---
+name: "check"
 weight: 40
 steps:
-- op: CheckPermission
-  resource: {{ .Prefix }}resource:firstdoc
-  subject: {{ .Prefix }}user:tom
-  permission: view
+  - op: "CheckPermission"
+    resource: "{{ .Prefix }}resource:firstdoc"
+    subject: "{{ .Prefix }}user:tom"
+    permission: "view"
 ---
-name: read
+name: "read"
 weight: 30
 steps:
-- op: ReadRelationships
-  resource: {{ .Prefix }}resource:firstdoc
-  numExpected: 2
----
-name: expand
-weight: 5
-steps:
-- op: ExpandPermissionTree
-  resource: {{ .Prefix }}resource:firstdoc
-  permission: reader
----
-name: lookup
-weight: 10
-steps:
-- op: LookupResources
-  resource: {{ .Prefix }}resource
-  permission: view
-  subject: {{ .Prefix }}user:tom
-  numExpected: 2
----
-name: lookupsubjects
-weight: 10
-steps:
-  - op: LookupSubjects
-    resource: {{ .Prefix }}resource:firstdoc
-    permission: view
-    subject: {{ .Prefix }}user
+  - op: "ReadRelationships"
+    resource: "{{ .Prefix }}resource:firstdoc"
     numExpected: 2
 ---
-name: write (touch)
+name: "expand"
+weight: 5
+steps:
+  - op: "ExpandPermissionTree"
+    resource: "{{ .Prefix }}resource:firstdoc"
+    permission: "reader"
+---
+name: "lookup"
+weight: 10
+steps:
+  - op: "LookupResources"
+    resource: "{{ .Prefix }}resource"
+    permission: "view"
+    subject: "{{ .Prefix }}user:tom"
+    numExpected: 2
+---
+name: "lookupsubjects"
+weight: 10
+steps:
+  - op: "LookupSubjects"
+    resource: "{{ .Prefix }}resource:firstdoc"
+    permission: "view"
+    subject: "{{ .Prefix }}user"
+    numExpected: 2
+---
+name: "write (touch)"
 weight: 3
 steps:
-- op: WriteRelationships
-  updates:
-  - op: TOUCH
-    resource: {{ .Prefix }}resource:firstdoc
-    subject: {{ .Prefix }}user:tom
-    relation: writer
+  - op: "WriteRelationships"
+    updates:
+      - op: "TOUCH"
+        resource: "{{ .Prefix }}resource:firstdoc"
+        subject: "{{ .Prefix }}user:tom"
+        relation: "writer"
 ---
-name: write (touch)
+name: "write (touch)"
 weight: 1
 steps:
-- op: WriteRelationships
-  updates:
-  - op: TOUCH
-    resource: {{ .Prefix }}resource:seconddoc
-    subject: {{ .Prefix }}user:fred
-    relation: reader
+  - op: "WriteRelationships"
+    updates:
+      - op: "TOUCH"
+        resource: "{{ .Prefix }}resource:seconddoc"
+        subject: "{{ .Prefix }}user:fred"
+        relation: "reader"
 ---
-name: delete
+name: "delete"
 weight: 1
 steps:
-  - op: DeleteRelationships
-    resource: {{ .Prefix }}resource:seconddoc
-    subject: {{ .Prefix }}user:fred
-    relation: reader
+  - op: "DeleteRelationships"
+    resource: "{{ .Prefix }}resource:seconddoc"
+    subject: "{{ .Prefix }}user:fred"
+    relation: "reader"
