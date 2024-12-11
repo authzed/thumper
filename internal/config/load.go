@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"math/rand"
+	"os"
 	"path"
 
 	"github.com/Masterminds/sprig/v3"
@@ -20,7 +21,14 @@ import (
 func Load(filename string, vars ScriptVariables) ([]*Script, bool, error) {
 	usedRandom := false
 	randomID := randomObjectID(64)
-	tmpl := template.New(path.Base(filename)).Funcs(template.FuncMap{
+
+	// Look for the file in the given path *or* in the kodata dir
+	filepath, err := findFile(filename, os.Getenv("KO_DATA_PATH"))
+	if err != nil {
+		return nil, false, err
+	}
+
+	tmpl := template.New(path.Base(filepath)).Funcs(template.FuncMap{
 		"enumerate": func(count uint) []uint {
 			indices := make([]uint, count)
 			for i := range indices {
@@ -39,9 +47,9 @@ func Load(filename string, vars ScriptVariables) ([]*Script, bool, error) {
 		},
 	}).Funcs(sprig.FuncMap())
 
-	parsed, err := tmpl.ParseFiles(filename)
+	parsed, err := tmpl.ParseFiles(filepath)
 	if err != nil {
-		return nil, false, fmt.Errorf("error parsing script %s: %w", filename, err)
+		return nil, false, fmt.Errorf("error parsing script %s: %w", filepath, err)
 	}
 
 	buf := &bytes.Buffer{}
@@ -85,4 +93,26 @@ func randomObjectID(length uint8) string {
 		b[i] = sourceLetters[rand.Intn(len(sourceLetters))]
 	}
 	return string(b)
+}
+
+// A pre-loaded file from the scripts dir is going to be put in the kodata
+// directory, which we don't want our users to have to find.
+// We first look for the file at the given path, then at
+// the kodata location, and return the found path or else error.
+func findFile(filename, koPath string) (string, error) {
+	_, firstErr := os.Stat(filename)
+	if firstErr == nil {
+		return filename, nil
+	}
+
+	koFilepath := path.Join(koPath, filename)
+
+	_, fallbackErr := os.Stat(koFilepath)
+	if fallbackErr == nil {
+		return koFilepath, nil
+	}
+
+	// If we can't find the file, we return the first error, because the
+	// kodata lookup is an implementation detail.
+	return "", firstErr
 }
