@@ -32,7 +32,7 @@ func main() {
 	rootCmd.PersistentFlags().String("permissions-system", "thumper", "permissions system to query")
 	rootCmd.PersistentFlags().String("endpoint", "localhost:50051", "authzed gRPC API endpoint")
 	rootCmd.PersistentFlags().String("token", "", "token used to authenticate to authzed")
-	rootCmd.PersistentFlags().Bool("insecure", true, "connect over a plaintext connection")
+	rootCmd.PersistentFlags().Bool("insecure", false, "connect over a plaintext connection")
 	rootCmd.PersistentFlags().Bool("no-verify-ca", false, "do not attempt to verify the server's certificate chain and host name")
 	rootCmd.PersistentFlags().String("ca-path", "", "override root certificate path")
 
