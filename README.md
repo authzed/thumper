@@ -8,7 +8,7 @@ It will issue CheckPermission, Read/Write Relationships, ExpandPermissionTree an
 Run the migration script required by your thumper scripts against your permission system.
 
 ```sh
-thumper migrate --endpoint grpc.authzed.com:443 --token t_some_token --insecure false ./scripts/schema.yaml
+thumper migrate --endpoint grpc.authzed.com:443 --token t_some_token ./scripts/schema.yaml
 ```
 
 ## Running
@@ -16,13 +16,13 @@ thumper migrate --endpoint grpc.authzed.com:443 --token t_some_token --insecure 
 ### Running against an Authzed instance
 
 ```sh
-thumper run --endpoint grpc.authzed.com:443 --token t_some_token --insecure false ./scripts/example.yaml
+thumper run --endpoint grpc.authzed.com:443 --token t_some_token ./scripts/example.yaml
 ```
 
 ### Running against a local SpiceDB
 
 ```sh
-thumper run --token presharedkeyhere ./scripts/example.yaml
+thumper run --token presharedkeyhere --insecure ./scripts/example.yaml
 ```
 
 ## Configuring
