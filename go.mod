@@ -2,22 +2,22 @@ module github.com/authzed/internal/thumper
 
 go 1.22.7
 
-toolchain go1.23.2
+toolchain go1.24.1
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/authzed/authzed-go v1.3.0
 	github.com/authzed/grpcutil v0.0.0-20230908193239-4286bb1d6403
-	github.com/ccoveille/go-safecast v1.5.0
+	github.com/ccoveille/go-safecast v1.6.1
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/jzelinskie/cobrautil/v2 v2.0.0-20240819150235-f7fe73942d0f
 	github.com/mroth/weightedrand v1.0.0
-	github.com/prometheus/client_golang v1.21.0
-	github.com/rs/zerolog v1.33.0
+	github.com/prometheus/client_golang v1.21.1
+	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.70.0
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/grpc v1.71.0
+	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
 )
 
