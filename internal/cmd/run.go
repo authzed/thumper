@@ -8,9 +8,15 @@ import (
 	thumperconf "github.com/authzed/internal/thumper/internal/config"
 	"github.com/authzed/internal/thumper/internal/thumperrunner"
 
+	"github.com/KimMachineGun/automemlimit/memlimit"
+	"github.com/go-logr/logr"
 	"github.com/jzelinskie/cobrautil/v2"
 	"github.com/jzelinskie/cobrautil/v2/cobrahttp"
+	"github.com/jzelinskie/cobrautil/v2/cobraotel"
+	"github.com/jzelinskie/cobrautil/v2/cobraproclimits"
+	"github.com/jzelinskie/cobrautil/v2/cobrazerolog"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +24,7 @@ import (
 var (
 	SyncFlagsCmdFunc = cobrautil.SyncViperPreRunE("THUMPER")
 	// TODO: this seems weird, but I'm not sure where to initialize it such that
-	// it's accessible when setting up flags and also when initializing the command
+	//  it's accessible when setting up flags and also when initializing the command
 	MetricsServerBuilder = cobrahttp.New("metrics",
 		cobrahttp.WithDefaultAddress(":9090"),
 		cobrahttp.WithFlagPrefix("metrics"),
@@ -48,8 +54,9 @@ var RunCmd = &cobra.Command{
 	Run with environment variables:
 		THUMPER_TOKEN=testtesttesttest thumper run ./scripts/script.yaml
 	`,
-	Args: cobra.MinimumNArgs(1),
-	RunE: runCmdFunc,
+	Args:    cobra.MinimumNArgs(1),
+	RunE:    runCmdFunc,
+	PreRunE: DefaultPreRunE("thumper"),
 }
 
 func runCmdFunc(cmd *cobra.Command, args []string) error {
@@ -110,8 +117,7 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	}
 
 	//	Kick off the workers.
-	//	TODO(jschorr): Add automatic disconnect if we start receiving
-	//	too many errors.
+	//	TODO(jschorr): Add automatic disconnect if we start receiving too many errors.
 	var wg sync.WaitGroup
 	timeBetween := time.Duration(1) * time.Second / time.Duration(qps)
 	for i := 0; i < qps; i++ {
@@ -144,4 +150,23 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	log.Info().Msg("terminating")
 
 	return nil
+}
+
+// DefaultPreRunE sets up viper, zerolog, and OpenTelemetry flag handling for a command.
+func DefaultPreRunE(programName string) cobrautil.CobraRunFunc {
+	return cobrautil.CommandStack(
+		cobrazerolog.New(
+			cobrazerolog.WithPreRunLevel(zerolog.DebugLevel),
+			cobrazerolog.WithTarget(func(logger zerolog.Logger) {
+				log.Logger = logger
+				zerolog.DefaultContextLogger = &logger
+				zerolog.SetGlobalLevel(logger.GetLevel())
+			})).RunE(),
+		// TODO we don't wire logger for now because cobrazerolog is not executed by the time we reference the logger
+		//  in the method call here
+		cobrautil.SyncViperDotEnvPreRunE(programName, "thumper.env", logr.Discard()),
+		cobraproclimits.SetMemLimitRunE(memlimit.WithRatio(1.0)),
+		cobraproclimits.SetProcLimitRunE(),
+		cobraotel.New("thumper").RunE(),
+	)
 }
