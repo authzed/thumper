@@ -29,8 +29,9 @@ var MigrateCmd = &cobra.Command{
 	Run with environment variables:
 		THUMPER_TOKEN=testtesttesttest thumper migrate ./scripts/schema.yaml
 	`,
-	Args: cobra.MinimumNArgs(1),
-	RunE: migrateCmdFunc,
+	Args:    cobra.MinimumNArgs(1),
+	RunE:    migrateCmdFunc,
+	PreRunE: DefaultPreRunE("thumper"),
 }
 
 func migrateCmdFunc(cmd *cobra.Command, args []string) error {

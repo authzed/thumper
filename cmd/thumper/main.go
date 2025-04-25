@@ -7,8 +7,10 @@ import (
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/jzelinskie/cobrautil/v2"
+	"github.com/jzelinskie/cobrautil/v2/cobraotel"
 	"github.com/jzelinskie/cobrautil/v2/cobrazerolog"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +18,6 @@ var buckets = []float64{.006, .010, .018, .024, .032, .042, .056, .075, .100, .1
 
 func main() {
 	// GCP stackdriver compatible logs
-	zl := cobrazerolog.New(cobrazerolog.WithPreRunLevel(zerolog.DebugLevel))
 	zerolog.LevelFieldName = "severity"
 	grpc_prometheus.EnableClientHandlingTimeHistogram(grpc_prometheus.WithHistogramBuckets(buckets))
 
@@ -25,9 +26,14 @@ func main() {
 		Short:             "The Authzed Load Generator",
 		Long:              "An artificial load generator for managing health and performance of Authzed.",
 		PersistentPreRunE: cmd.SyncFlagsCmdFunc,
+		PreRunE:           cmd.DefaultPreRunE("thumper"),
 	}
 
-	zl.RegisterFlags(rootCmd.PersistentFlags())
+	cobrazerolog.New().RegisterFlags(rootCmd.PersistentFlags())
+	if err := cobrazerolog.New().RegisterFlagCompletion(rootCmd); err != nil {
+		log.Logger.Fatal().Err(err).Msg("failed to register log flag completion")
+	}
+	cobraotel.New("thumper").RegisterFlags(rootCmd.PersistentFlags())
 
 	rootCmd.PersistentFlags().String("permissions-system", "thumper", "permissions system to query")
 	rootCmd.PersistentFlags().String("endpoint", "localhost:50051", "authzed gRPC API endpoint")
@@ -37,9 +43,10 @@ func main() {
 	rootCmd.PersistentFlags().String("ca-path", "", "override root certificate path")
 
 	versionCmd := &cobra.Command{
-		Use:   "version",
-		Short: "display thumper version information",
-		RunE:  cobrautil.VersionRunFunc("thumper"),
+		Use:     "version",
+		Short:   "display thumper version information",
+		RunE:    cobrautil.VersionRunFunc("thumper"),
+		PreRunE: cmd.DefaultPreRunE("thumper"),
 	}
 	cobrautil.RegisterVersionFlags(versionCmd.Flags())
 	rootCmd.AddCommand(versionCmd)
