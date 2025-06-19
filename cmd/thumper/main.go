@@ -27,6 +27,7 @@ func main() {
 		Long:              "An artificial load generator for managing health and performance of Authzed.",
 		PersistentPreRunE: cmd.SyncFlagsCmdFunc,
 		PreRunE:           cmd.DefaultPreRunE("thumper"),
+		SilenceUsage:      true,
 	}
 
 	cobrazerolog.New().RegisterFlags(rootCmd.PersistentFlags())
