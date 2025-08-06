@@ -5,6 +5,15 @@ It will issue CheckPermission, Read/Write Relationships, ExpandPermissionTree an
 
 ## Setting up
 
+Install thumper
+
+```
+git clone https://github.com/authzed/thumper.git
+cd thumper
+go build -o thumper ./cmd/thumper
+sudo mv thumper /usr/local/bin/  # Optional if you want to move thumper into $PATH
+```
+
 Run the migration script required by your thumper scripts against your permission system.
 
 ```sh
