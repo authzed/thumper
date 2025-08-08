@@ -7,7 +7,7 @@ It will issue CheckPermission, Read/Write Relationships, ExpandPermissionTree an
 
 Install thumper
 
-```
+```sh
 git clone https://github.com/authzed/thumper.git
 cd thumper
 go build -o thumper ./cmd/thumper
