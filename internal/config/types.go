@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 
-	"google.golang.org/protobuf/types/known/structpb"
 	"github.com/goccy/go-yaml"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Script is the top-level struct that yaml script files will be deserialized into.
@@ -55,16 +55,10 @@ type CaveatContext struct {
 	Context *ProtoStruct
 }
 
-
-func (p *ProtoStruct) UnmarshalYAML(value *yaml.Node) error {
-	fmt.Println("unmarshaling proto struct")
-	if value.Kind != yaml.MappingNode {
-		return fmt.Errorf("expected mapping node, got %v", value.Kind)
-	}
-
+func (p *ProtoStruct) UnmarshalYAML(b []byte) error {
 	c := make(map[string]interface{})
 
-	if err := value.Decode(c); err != nil {
+	if err := yaml.Unmarshal(b, &c); err != nil {
 		return fmt.Errorf("failed to decode struct: %w", err)
 	}
 
@@ -164,4 +158,4 @@ func convertValue(path string, v interface{}) (*structpb.Value, error) {
 	}
 }
 
-var _ yaml.Unmarshaler = (*ProtoStruct)(nil)
+var _ yaml.BytesUnmarshaler = (*ProtoStruct)(nil)

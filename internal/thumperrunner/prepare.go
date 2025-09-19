@@ -26,7 +26,7 @@ func Prepare(inputs []*config.Script) (prepared []*ExecutableScript, err error) 
 			var step executableStep
 			step, err = prepareStep(rawStep)
 			if err != nil {
-				return
+				return prepared, err
 			}
 
 			steps = append(steps, step)
@@ -39,7 +39,7 @@ func Prepare(inputs []*config.Script) (prepared []*ExecutableScript, err error) 
 		})
 	}
 
-	return
+	return prepared, err
 }
 
 func prepareStep(step config.ScriptStep) (executableStep, error) {
@@ -318,7 +318,7 @@ func parseComponents(obj string) (objType string, objID string, relation string)
 	if len(typeAndID) > 1 {
 		objID = typeAndID[1]
 	}
-	return
+	return objType, objID, relation
 }
 
 func parseObject(obj string) (*v1.ObjectReference, error) {
