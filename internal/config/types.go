@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/types/known/structpb"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 // Script is the top-level struct that yaml script files will be deserialized into.
@@ -54,6 +54,7 @@ type CaveatContext struct {
 	Name    string
 	Context *ProtoStruct
 }
+
 
 func (p *ProtoStruct) UnmarshalYAML(value *yaml.Node) error {
 	fmt.Println("unmarshaling proto struct")
