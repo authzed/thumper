@@ -26,7 +26,7 @@ func Prepare(inputs []*config.Script) (prepared []*ExecutableScript, err error) 
 			var step executableStep
 			step, err = prepareStep(rawStep)
 			if err != nil {
-				return
+				return prepared, err
 			}
 
 			steps = append(steps, step)
@@ -39,7 +39,7 @@ func Prepare(inputs []*config.Script) (prepared []*ExecutableScript, err error) 
 		})
 	}
 
-	return
+	return prepared, err
 }
 
 func prepareStep(step config.ScriptStep) (executableStep, error) {
@@ -233,6 +233,69 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			}
 			return zt, nil
 		}
+	case "CheckBulkPermissions":
+		// Set up the check request
+		items := make([]*v1.CheckBulkPermissionsRequestItem, 0, len(step.Checks))
+		for _, check := range step.Checks {
+			resource, err := parseObject(check.Resource)
+			if err != nil {
+				return executableStep{}, fmt.Errorf("error parsing CheckBulkPermissions resource: %w", err)
+			}
+
+			subject, err := parseSubject(check.Subject)
+			if err != nil {
+				return executableStep{}, fmt.Errorf("error parsing CheckBulkPermissions subject: %w", err)
+			}
+			items = append(items, &v1.CheckBulkPermissionsRequestItem{
+				Resource:   resource,
+				Permission: check.Permission,
+				Subject:    subject,
+				Context:    (*structpb.Struct)(check.Context),
+			})
+		}
+
+		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+			req := &v1.CheckBulkPermissionsRequest{
+				Consistency: consistencyForZedToken(zt),
+				Items:       items,
+			}
+			resp, err := client.CheckBulkPermissions(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+
+			// NOTE: this depends on the response ordering being the same as
+			// the request ordering, which should be an assumption we can make.
+			for index, pair := range resp.Pairs {
+				check := step.Checks[index]
+
+				expected := v1.CheckPermissionResponse_PERMISSIONSHIP_HAS_PERMISSION
+				if check.ExpectNoPermission {
+					expected = v1.CheckPermissionResponse_PERMISSIONSHIP_NO_PERMISSION
+				}
+
+				switch check.ExpectPermissionship {
+				case "HAS_PERMISSION":
+					expected = v1.CheckPermissionResponse_PERMISSIONSHIP_HAS_PERMISSION
+				case "NO_PERMISSION":
+					expected = v1.CheckPermissionResponse_PERMISSIONSHIP_NO_PERMISSION
+				case "CONDITIONAL_PERMISSION":
+					expected = v1.CheckPermissionResponse_PERMISSIONSHIP_CONDITIONAL_PERMISSION
+				}
+
+				if permissionship := pair.GetItem().Permissionship; permissionship != expected {
+					return nil, fmt.Errorf(
+						"CheckBulkPermissions returned wrong permissionship: %s#%s@%s => %s",
+						check.Resource,
+						check.Permission,
+						check.Subject,
+						permissionship,
+					)
+				}
+			}
+
+			return resp.CheckedAt, nil
+		}
 	default:
 		return executableStep{}, fmt.Errorf("unknown script step operation: %s", step.Op)
 	}
@@ -318,7 +381,7 @@ func parseComponents(obj string) (objType string, objID string, relation string)
 	if len(typeAndID) > 1 {
 		objID = typeAndID[1]
 	}
-	return
+	return objType, objID, relation
 }
 
 func parseObject(obj string) (*v1.ObjectReference, error) {
