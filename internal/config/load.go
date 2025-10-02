@@ -12,8 +12,8 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ccoveille/go-safecast"
+	"github.com/goccy/go-yaml"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v3"
 )
 
 // Load reads a script file, replaces the templated values with the values from
