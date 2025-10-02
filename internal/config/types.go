@@ -15,6 +15,8 @@ type Script struct {
 }
 
 // ScriptStep is a single step of a thumper script, for example a single call to CheckPermissions.
+// TODO: it would be good to break this down into separate types/interfaces
+// so that it's not just one ur-type - i.e. discriminated union or something
 type ScriptStep struct {
 	Op                   string
 	Resource             string
@@ -24,9 +26,20 @@ type ScriptStep struct {
 	ExpectPermissionship string `yaml:"expectPermissionship"`
 	NumExpected          uint   `yaml:"numExpected"`
 	Updates              []Update
+	Checks               []Check
 	Schema               string
 	Consistency          string
 	Context              *ProtoStruct
+}
+
+// Check is one of a set of Checks handed to CheckBulk
+type Check struct {
+	Resource             string
+	Subject              string
+	Permission           string
+	Context              *ProtoStruct
+	ExpectNoPermission   bool   `yaml:"expectNoPermission"`
+	ExpectPermissionship string `yaml:"expectPermissionship"`
 }
 
 // Update is a mutation to a single relationship in a WriteRelationships call.

@@ -66,3 +66,18 @@ steps:
     resource: "{{ .Prefix }}resource:seconddoc"
     subject: "{{ .Prefix }}user:fred"
     relation: "reader"
+---
+name: "checkbulk"
+weight: 30
+steps:
+  - op: "CheckBulkPermissions"
+    checks:
+      - resource: "{{ .Prefix }}resource:seconddoc"
+        subject: "{{ .Prefix }}user:fred"
+        permission: "reader"
+      - resource: "{{ .Prefix }}resource:firstdoc"
+        subject: "{{ .Prefix }}user:tom"
+        permission: "reader"
+      - resource: "{{ .Prefix }}resource:firstdoc"
+        subject: "{{ .Prefix }}user:fred"
+        permission: "reader"
