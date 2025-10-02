@@ -18,7 +18,7 @@ import (
 
 var MigrateCmd = &cobra.Command{
 	Use:   "migrate migration.yaml [migration2.yaml] [migration3.yaml]",
-	Short: "run thumper migration scripts",
+	Short: "run setup scripts",
 	Example: `
 	Run with a single script against a local SpiceDB:
 		thumper migrate ./scripts/schema.yaml --token "testtesttesttest"

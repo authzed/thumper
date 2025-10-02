@@ -33,7 +33,7 @@ var (
 )
 
 func RegisterRunFlags(cmd *cobra.Command) {
-	cmd.Flags().Int("qps", 1, "QPS with which to call authzed")
+	cmd.Flags().Int("qps", 1, "queries per second to generate")
 	cmd.Flags().Duration("step-timeout", 500*time.Millisecond, "maximum time a single step is allowed to run")
 	cmd.Flags().Bool("randomize-starting-step", false, "randomize the starting script step for each worker")
 
@@ -43,7 +43,7 @@ func RegisterRunFlags(cmd *cobra.Command) {
 
 var RunCmd = &cobra.Command{
 	Use:   "run script.yaml [script2.yaml] [script3.yaml]",
-	Short: "run thumper load generator",
+	Short: "run traffic generator",
 	Example: `
 	Run with a single script against a local SpiceDB:
 		thumper run ./scripts/script.yaml --token "testtesttesttest"
