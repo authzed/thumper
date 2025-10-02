@@ -23,8 +23,8 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use:               "thumper",
-		Short:             "The Authzed Load Generator",
-		Long:              "An artificial load generator for managing health and performance of Authzed.",
+		Short:             "SpiceDB Traffic Generator",
+		Long:              "An artificial traffic generator and availability probe.",
 		PersistentPreRunE: cmd.SyncFlagsCmdFunc,
 		PreRunE:           cmd.DefaultPreRunE("thumper"),
 		SilenceUsage:      true,

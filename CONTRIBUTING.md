@@ -3,8 +3,7 @@
 ## Communication
 
 - Issues: [GitHub](https://github.com/authzed/thumper/issues)
-- Email: [Google Groups](https://groups.google.com/g/authzed-oss)
-- Discord: [Zanzibar Discord](https://discord.gg/jTysUaxXzM)
+- Discord: [Discord](https://discord.gg/jTysUaxXzM)
 
 All communication must follow our [Code of Conduct].
 
