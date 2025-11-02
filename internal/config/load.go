@@ -36,7 +36,7 @@ func Load(filename string, vars ScriptVariables) ([]*Script, bool, error) {
 				// is always nonnegative, but gosec doesn't know
 				// that yet.
 				// TODO: remove this when gosec catches up
-				index, _ := safecast.ToUint(i)
+				index, _ := safecast.Convert[uint](i)
 				indices[i] = index
 			}
 			return indices
