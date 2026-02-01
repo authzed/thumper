@@ -11,7 +11,7 @@ require (
 	github.com/authzed/grpcutil v0.0.0-20240123194739-2ea1e3d2d98b
 	github.com/ccoveille/go-safecast v1.8.2
 	github.com/go-logr/logr v1.4.3
-	github.com/goccy/go-yaml v1.19.1
+	github.com/goccy/go-yaml v1.19.2
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/jzelinskie/cobrautil/v2 v2.0.0-20240819150235-f7fe73942d0f
 	github.com/mroth/weightedrand v1.0.0
