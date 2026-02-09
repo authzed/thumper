@@ -7,7 +7,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/authzed/authzed-go/v1"
 	"github.com/mroth/weightedrand"
 	"github.com/rs/zerolog/log"
 )
@@ -15,7 +14,7 @@ import (
 // WorkerOptions represent the configuration for the worker
 type WorkerOptions struct {
 	Index             int
-	Client            *authzed.Client
+	Client            Client
 	Scripts           []*ExecutableScript
 	StepTimeout       time.Duration
 	StepRandomization bool

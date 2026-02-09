@@ -6,14 +6,28 @@ import (
 	"time"
 
 	v1 "github.com/authzed/authzed-go/proto/authzed/api/v1"
-	"github.com/authzed/authzed-go/v1"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
 )
+
+// Client is an interface that abstracts the SpiceDB API calls used by thumper.
+// *authzed.Client satisfies this interface.
+type Client interface {
+	CheckPermission(ctx context.Context, in *v1.CheckPermissionRequest, opts ...grpc.CallOption) (*v1.CheckPermissionResponse, error)
+	ReadRelationships(ctx context.Context, in *v1.ReadRelationshipsRequest, opts ...grpc.CallOption) (v1.PermissionsService_ReadRelationshipsClient, error)
+	DeleteRelationships(ctx context.Context, in *v1.DeleteRelationshipsRequest, opts ...grpc.CallOption) (*v1.DeleteRelationshipsResponse, error)
+	ExpandPermissionTree(ctx context.Context, in *v1.ExpandPermissionTreeRequest, opts ...grpc.CallOption) (*v1.ExpandPermissionTreeResponse, error)
+	LookupResources(ctx context.Context, in *v1.LookupResourcesRequest, opts ...grpc.CallOption) (v1.PermissionsService_LookupResourcesClient, error)
+	LookupSubjects(ctx context.Context, in *v1.LookupSubjectsRequest, opts ...grpc.CallOption) (v1.PermissionsService_LookupSubjectsClient, error)
+	WriteRelationships(ctx context.Context, in *v1.WriteRelationshipsRequest, opts ...grpc.CallOption) (*v1.WriteRelationshipsResponse, error)
+	WriteSchema(ctx context.Context, in *v1.WriteSchemaRequest, opts ...grpc.CallOption) (*v1.WriteSchemaResponse, error)
+	CheckBulkPermissions(ctx context.Context, in *v1.CheckBulkPermissionsRequest, opts ...grpc.CallOption) (*v1.CheckBulkPermissionsResponse, error)
+}
 
 type executableStep struct {
 	op          string
 	consistency string
-	body        func(context.Context, *authzed.Client, *v1.ZedToken) (*v1.ZedToken, error)
+	body        func(context.Context, Client, *v1.ZedToken) (*v1.ZedToken, error)
 }
 
 // ExecutableScript is a thumper yaml script that has been post-processed for
@@ -26,7 +40,7 @@ type ExecutableScript struct {
 
 type ExecutableContext struct {
 	script *ExecutableScript
-	client *authzed.Client
+	client Client
 
 	numExecuted int
 	zedToken    *v1.ZedToken
@@ -65,7 +79,7 @@ func (s *ExecutableContext) StepForward(workerIndex int, stepTimeout time.Durati
 }
 
 // RunOnce runs all steps in a script and then stops.
-func (s *ExecutableScript) RunOnce(client *authzed.Client) error {
+func (s *ExecutableScript) RunOnce(client Client) error {
 	log.Info().Str("script", s.name).Msg("running migration script")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3600*time.Second)
