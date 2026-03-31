@@ -11,7 +11,7 @@ jobs:
     name: "Lint Go"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v6"
       - uses: "authzed/actions/setup-go@main"
       - uses: "authzed/actions/gofumpt@main"
       - uses: "authzed/actions/go-mod-tidy@main"
@@ -22,20 +22,21 @@ jobs:
     name: "Lint YAML & Markdown"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v6"
       - uses: "authzed/actions/yaml-lint@main"
       - uses: "authzed/actions/markdown-lint@main"
 
-  # TODO: where is the build for this happening?
   trivy-fs:
     name: "Analyze FS with Trivy"
     runs-on: "ubuntu-latest"
+    permissions:
+      contents: "read"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v6"
       - uses: "authzed/actions/setup-go@main"
       # Run the build so that trivy has something to analyze
       - uses: "authzed/actions/go-build@main"
-      - uses: "aquasecurity/trivy-action@master"
+      - uses: "aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1" # v0.35.0
         with:
           scan-type: "fs"
           ignore-unfixed: true
@@ -50,7 +51,7 @@ jobs:
     name: "Analyze Release Image with Trivy"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v6"
       - uses: "authzed/actions/setup-go@main"
       - uses: "goreleaser/goreleaser-action@v6"
         id: "goreleaser"
@@ -64,4 +65,4 @@ jobs:
         run: |
           echo "IMAGE_NAME=$(jq '.[] | select(.extra.ID == "dockerhub-ko") | .path' dist/linux_amd64_v1/artifacts.json --raw-output)" >> $GITHUB_ENV
       - name: "run trivy on release image"
-        run: "docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --format table --exit-code 1 --ignore-unfixed --vuln-type os,library --no-progress --severity CRITICAL,HIGH,MEDIUM ${{ env.IMAGE_NAME }} --db-repository public.ecr.aws/aquasecurity/trivy-db --java-db-repository public.ecr.aws/aquasecurity/trivy-java-db"
+        run: "docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.69.3 image --format table --exit-code 1 --ignore-unfixed --vuln-type os,library --no-progress --severity CRITICAL,HIGH,MEDIUM ${{ env.IMAGE_NAME }} --db-repository public.ecr.aws/aquasecurity/trivy-db --java-db-repository public.ecr.aws/aquasecurity/trivy-java-db"

@@ -11,7 +11,7 @@ import (
 	"path"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/ccoveille/go-safecast"
+	"github.com/ccoveille/go-safecast/v2"
 	"github.com/goccy/go-yaml"
 	"github.com/rs/zerolog/log"
 )
