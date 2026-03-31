@@ -100,14 +100,14 @@ func randomObjectID(length uint8) string {
 // We first look for the file at the given path, then at
 // the kodata location, and return the found path or else error.
 func findFile(filename, koPath string) (string, error) {
-	_, firstErr := os.Stat(filename)
+	_, firstErr := os.Stat(filename) //nolint:gosec // filename is provided via CLI args by the local user who already has filesystem access
 	if firstErr == nil {
 		return filename, nil
 	}
 
 	koFilepath := path.Join(koPath, filename)
 
-	_, fallbackErr := os.Stat(koFilepath)
+	_, fallbackErr := os.Stat(koFilepath) //nolint:gosec // filename is provided via CLI args by the local user who already has filesystem access
 	if fallbackErr == nil {
 		return koFilepath, nil
 	}
