@@ -23,7 +23,7 @@ type WorkerOptions struct {
 
 // RunWorker runs a worker, with the given index and set of executable Scripts.
 func RunWorker(options WorkerOptions) {
-	choices := make([]weightedrand.Choice, 0)
+	choices := make([]weightedrand.Choice, 0, len(options.Scripts))
 	for _, script := range options.Scripts {
 		numExecuted := 0
 		if options.StepRandomization {
