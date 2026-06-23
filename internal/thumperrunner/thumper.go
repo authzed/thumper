@@ -33,6 +33,7 @@ func RunWorker(options WorkerOptions) {
 			script:      script,
 			client:      options.Client,
 			numExecuted: numExecuted,
+			source:      script.source,
 		}
 		choices = append(choices, weightedrand.NewChoice(executable, script.weight))
 	}
