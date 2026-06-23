@@ -18,6 +18,7 @@ type WorkerOptions struct {
 	Client            *authzed.Client
 	Scripts           []*ExecutableScript
 	StepTimeout       time.Duration
+	StepInterval      time.Duration
 	StepRandomization bool
 }
 
@@ -46,7 +47,11 @@ func RunWorker(options WorkerOptions) {
 
 	log.Info().Int("worker", options.Index).Msg("starting worker")
 
-	ticker := time.NewTicker(1 * time.Second)
+	stepInterval := options.StepInterval
+	if stepInterval <= 0 {
+		stepInterval = 1 * time.Second
+	}
+	ticker := time.NewTicker(stepInterval)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	for {

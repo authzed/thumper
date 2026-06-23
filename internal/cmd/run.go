@@ -35,6 +35,7 @@ var (
 func RegisterRunFlags(cmd *cobra.Command) {
 	cmd.Flags().Int("qps", 1, "queries per second to generate")
 	cmd.Flags().Duration("step-timeout", 500*time.Millisecond, "maximum time a single step is allowed to run")
+	cmd.Flags().Duration("step-interval", time.Second, "time each worker waits between steps; lower it to drive more steps per worker (effective throughput is qps / step-interval)")
 	cmd.Flags().Bool("randomize-starting-step", false, "randomize the starting script step for each worker")
 	cmd.Flags().Bool("rerender", false, "re-render each script from its source file at the start of every cycle through its steps, regenerating template values such as randomObjectID for each cycle instead of once at startup")
 
@@ -63,6 +64,7 @@ var RunCmd = &cobra.Command{
 func runCmdFunc(cmd *cobra.Command, args []string) error {
 	qps := cobrautil.MustGetInt(cmd, "qps")
 	stepTimeout := cobrautil.MustGetDuration(cmd, "step-timeout")
+	stepInterval := cobrautil.MustGetDuration(cmd, "step-interval")
 	stepRandomization := cobrautil.MustGetBool(cmd, "randomize-starting-step")
 	rerender := cobrautil.MustGetBool(cmd, "rerender")
 	psName := cobrautil.MustGetString(cmd, "permissions-system")
@@ -125,7 +127,9 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	//	Kick off the workers.
 	//	TODO(jschorr): Add automatic disconnect if we start receiving too many errors.
 	var wg sync.WaitGroup
-	timeBetween := time.Duration(1) * time.Second / time.Duration(qps)
+	// Stagger worker starts evenly across one step interval so their ticks are
+	// spread out rather than firing all at once.
+	timeBetween := stepInterval / time.Duration(qps)
 	for i := 0; i < qps; i++ {
 		wg.Add(1)
 		index := i
@@ -138,6 +142,7 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 				Client:            client,
 				Scripts:           workerScripts[index],
 				StepTimeout:       stepTimeout,
+				StepInterval:      stepInterval,
 				StepRandomization: stepRandomization,
 			})
 		}()
