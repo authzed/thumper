@@ -123,7 +123,7 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	for i := 0; i < qps; i++ {
 		wg.Add(1)
 		index := i
-		go (func() {
+		go func() {
 			defer wg.Done()
 
 			client := clientFromFlags(cmd)
@@ -134,7 +134,7 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 				StepTimeout:       stepTimeout,
 				StepRandomization: stepRandomization,
 			})
-		})()
+		}()
 		time.Sleep(timeBetween)
 	}
 
@@ -161,7 +161,8 @@ func DefaultPreRunE(programName string) cobrautil.CobraRunFunc {
 				log.Logger = logger
 				zerolog.DefaultContextLogger = &logger
 				zerolog.SetGlobalLevel(logger.GetLevel())
-			})).RunE(),
+			}),
+		).RunE(),
 		// TODO we don't wire logger for now because cobrazerolog is not executed by the time we reference the logger
 		//  in the method call here
 		cobrautil.SyncViperDotEnvPreRunE(programName, "thumper.env", logr.Discard()),
