@@ -1,25 +1,28 @@
 name: load some data
 weight: 1
+# randomObjectID returns one value per render, so it is used as a per-run
+# namespace and combined with the loop indices to keep the 100 orgs (and their
+# tokens) distinct within a single run while staying unique across runs.
 steps:
 {{- range $j := enumerate 100 }}
 - op: WriteRelationships
   updates:
   - op: TOUCH
-    resource: {{ $.Prefix }}organization:org_{{ $j }}
-    subject: {{ $.Prefix }}platform:plat_{{ $j }}
+    resource: {{ $.Prefix }}organization:org_{{ randomObjectID }}_{{ $j }}
+    subject: {{ $.Prefix }}platform:plat_{{ randomObjectID }}_{{ $j }}
     relation: platform
   - op: TOUCH
-    resource: {{ $.Prefix }}tenant:ps_{{ $j }}
-    subject: {{ $.Prefix }}organization:org_{{ $j }}
+    resource: {{ $.Prefix }}tenant:ps_{{ randomObjectID }}_{{ $j }}
+    subject: {{ $.Prefix }}organization:org_{{ randomObjectID }}_{{ $j }}
     relation: organization
   - op: TOUCH
-    resource: {{ $.Prefix }}tenant:ps_{{ $j }}
-    subject: {{ $.Prefix }}client:client_{{ $j }}#token
+    resource: {{ $.Prefix }}tenant:ps_{{ randomObjectID }}_{{ $j }}
+    subject: {{ $.Prefix }}client:client_{{ randomObjectID }}_{{ $j }}#token
     relation: writer
 {{- range $i := enumerate 10 }}
   - op: TOUCH
-    resource: {{ $.Prefix }}client:client_{{ $j }}
-    subject: {{ $.Prefix }}token:t_{{ $j }}{{ $i }}
+    resource: {{ $.Prefix }}client:client_{{ randomObjectID }}_{{ $j }}
+    subject: {{ $.Prefix }}token:t_{{ randomObjectID }}_{{ $j }}_{{ $i }}
     relation: token
 {{- end }}
 {{- end }}
