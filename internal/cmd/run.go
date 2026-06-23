@@ -36,6 +36,7 @@ func RegisterRunFlags(cmd *cobra.Command) {
 	cmd.Flags().Int("qps", 1, "queries per second to generate")
 	cmd.Flags().Duration("step-timeout", 500*time.Millisecond, "maximum time a single step is allowed to run")
 	cmd.Flags().Bool("randomize-starting-step", false, "randomize the starting script step for each worker")
+	cmd.Flags().Bool("rerender", false, "re-render each script from its source file at the start of every cycle through its steps, regenerating template values such as randomObjectID for each cycle instead of once at startup")
 
 	// Register http flags
 	MetricsServerBuilder.RegisterFlags(cmd.Flags())
@@ -63,6 +64,7 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	qps := cobrautil.MustGetInt(cmd, "qps")
 	stepTimeout := cobrautil.MustGetDuration(cmd, "step-timeout")
 	stepRandomization := cobrautil.MustGetBool(cmd, "randomize-starting-step")
+	rerender := cobrautil.MustGetBool(cmd, "rerender")
 	psName := cobrautil.MustGetString(cmd, "permissions-system")
 	log.Info().Int("qps", qps).Str("permission-system", psName).Msg("starting run command")
 
@@ -100,6 +102,10 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 			preparedFileScripts, err := thumperrunner.Prepare(fileScripts)
 			if err != nil {
 				return fmt.Errorf("error preparing scripts for execution: %w", err)
+			}
+
+			if rerender {
+				thumperrunner.EnableRerender(preparedFileScripts, scriptFilename, scriptVars)
 			}
 
 			if !usedRandom {
