@@ -1,28 +1,41 @@
-name: load some data
+name: load some data (scattered keys)
 weight: 1
-# randomObjectID returns one value per render, so it is used as a per-run
-# namespace and combined with the loop indices to keep the 100 orgs (and their
-# tokens) distinct within a single run while staying unique across runs.
+# randomObjectID returns ONE value per render, so on its own the only thing that
+# varied across the 100 entity groups below was the trailing "_<j>" index.
+# Because object_id is the second column of the relation_tuple primary key, that
+# made every key in a render lexically adjacent (org_<rid>_0, _1, ... _99), which
+# funnels all writes into a single CRDB range -> hot range -> WriteTooOldError
+# (SQLSTATE 40001) retries, independent of overlap strategy or key uniqueness.
+#
+# To spread the writes across the keyspace we derive each group's id by hashing
+# (randomObjectID, $j). The hash is:
+#   - deterministic within a render for a given $j, so the same id appears in
+#     every update of the group and the relationship chain stays connected;
+#   - uniformly distributed, so groups scatter across ranges (no hot range);
+#   - fresh per render (randomObjectID changes each cycle), so --rerender keeps
+#     performing real inserts instead of no-op re-TOUCHes.
+{{- $rid := randomObjectID }}
 steps:
 {{- range $j := enumerate 100 }}
+{{- $id := sha256sum (printf "%s_%d" $rid $j) }}
 - op: WriteRelationships
   updates:
   - op: TOUCH
-    resource: {{ $.Prefix }}organization:org_{{ randomObjectID }}_{{ $j }}
-    subject: {{ $.Prefix }}platform:plat_{{ randomObjectID }}_{{ $j }}
+    resource: {{ $.Prefix }}organization:org_{{ $id }}
+    subject: {{ $.Prefix }}platform:plat_{{ $id }}
     relation: platform
   - op: TOUCH
-    resource: {{ $.Prefix }}tenant:ps_{{ randomObjectID }}_{{ $j }}
-    subject: {{ $.Prefix }}organization:org_{{ randomObjectID }}_{{ $j }}
+    resource: {{ $.Prefix }}tenant:ps_{{ $id }}
+    subject: {{ $.Prefix }}organization:org_{{ $id }}
     relation: organization
   - op: TOUCH
-    resource: {{ $.Prefix }}tenant:ps_{{ randomObjectID }}_{{ $j }}
-    subject: {{ $.Prefix }}client:client_{{ randomObjectID }}_{{ $j }}#token
+    resource: {{ $.Prefix }}tenant:ps_{{ $id }}
+    subject: {{ $.Prefix }}client:client_{{ $id }}#token
     relation: writer
 {{- range $i := enumerate 10 }}
   - op: TOUCH
-    resource: {{ $.Prefix }}client:client_{{ randomObjectID }}_{{ $j }}
-    subject: {{ $.Prefix }}token:t_{{ randomObjectID }}_{{ $j }}_{{ $i }}
+    resource: {{ $.Prefix }}client:client_{{ $id }}
+    subject: {{ $.Prefix }}token:t_{{ $id }}_{{ $i }}
     relation: token
 {{- end }}
 {{- end }}
