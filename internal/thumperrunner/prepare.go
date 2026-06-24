@@ -10,7 +10,6 @@ import (
 	"github.com/authzed/internal/thumper/internal/config"
 
 	v1 "github.com/authzed/authzed-go/proto/authzed/api/v1"
-	"github.com/authzed/authzed-go/v1"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -85,7 +84,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			expected = v1.CheckPermissionResponse_PERMISSIONSHIP_CONDITIONAL_PERMISSION
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
 			req.Consistency = consistencyForZedToken(zt)
 
 			resp, err := client.CheckPermission(ctx, req)
@@ -115,7 +114,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			RelationshipFilter: filter,
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
 			req.Consistency = consistencyForZedToken(zt)
 			resp, err := client.ReadRelationships(ctx, req)
 			if err != nil {
@@ -134,7 +133,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			RelationshipFilter: filter,
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, _ *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, _ *v1.ZedToken) (*v1.ZedToken, error) {
 			resp, err := client.DeleteRelationships(ctx, req)
 			if err != nil {
 				return nil, err
@@ -152,7 +151,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			Permission: step.Permission,
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
 			req.Consistency = consistencyForZedToken(zt)
 			resp, err := client.ExpandPermissionTree(ctx, req)
 			if err != nil {
@@ -174,7 +173,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			Context:            (*structpb.Struct)(step.Context),
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
 			req.Consistency = consistencyForZedToken(zt)
 			resp, err := client.LookupResources(ctx, req)
 			if err != nil {
@@ -196,7 +195,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			Context:           (*structpb.Struct)(step.Context),
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
 			req.Consistency = consistencyForZedToken(zt)
 			resp, err := client.LookupSubjects(ctx, req)
 			if err != nil {
@@ -214,7 +213,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			Updates: updates,
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, _ *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, _ *v1.ZedToken) (*v1.ZedToken, error) {
 			resp, err := client.WriteRelationships(ctx, req)
 			if err != nil {
 				return nil, err
@@ -226,7 +225,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			Schema: step.Schema,
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
 			_, err := client.WriteSchema(ctx, req)
 			if err != nil {
 				return nil, err
@@ -254,7 +253,7 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 			})
 		}
 
-		execStep.body = func(ctx context.Context, client *authzed.Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
+		execStep.body = func(ctx context.Context, client Client, zt *v1.ZedToken) (*v1.ZedToken, error) {
 			req := &v1.CheckBulkPermissionsRequest{
 				Consistency: consistencyForZedToken(zt),
 				Items:       items,
