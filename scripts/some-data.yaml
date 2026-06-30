@@ -1,5 +1,6 @@
 name: load some data (scattered keys)
 weight: 1
+recordTtl: 10m
 # randomObjectID returns ONE value per render, so on its own the only thing that
 # varied across the 100 entity groups below was the trailing "_<j>" index.
 # Because object_id is the second column of the relation_tuple primary key, that

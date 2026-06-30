@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/authzed/internal/thumper/internal/config"
 
@@ -15,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Prepare transforms a loaded yaml script into one that can be efficiently executed.
@@ -24,7 +26,7 @@ func Prepare(inputs []*config.Script) (prepared []*ExecutableScript, err error) 
 
 		for _, rawStep := range input.Steps {
 			var step executableStep
-			step, err = prepareStep(rawStep)
+			step, err = prepareStep(rawStep, input.RecordTTL)
 			if err != nil {
 				return prepared, err
 			}
@@ -42,7 +44,7 @@ func Prepare(inputs []*config.Script) (prepared []*ExecutableScript, err error) 
 	return prepared, err
 }
 
-func prepareStep(step config.ScriptStep) (executableStep, error) {
+func prepareStep(step config.ScriptStep, recordTTL time.Duration) (executableStep, error) {
 	consistencyForZedToken, consistencyDesc, err := prepareConsistency(step)
 	if err != nil {
 		return executableStep{}, fmt.Errorf("error preparing consistency: %w", err)
@@ -215,6 +217,16 @@ func prepareStep(step config.ScriptStep) (executableStep, error) {
 		}
 
 		execStep.body = func(ctx context.Context, client *authzed.Client, _ *v1.ZedToken) (*v1.ZedToken, error) {
+			if recordTTL > 0 {
+				// Compute the expiration relative to write time so each
+				// written relationship lives for recordTTL rather than
+				// expiring at a fixed instant baked in at prepare time.
+				expiresAt := timestamppb.New(time.Now().Add(recordTTL))
+				for _, update := range req.Updates {
+					update.Relationship.OptionalExpiresAt = expiresAt
+				}
+			}
+
 			resp, err := client.WriteRelationships(ctx, req)
 			if err != nil {
 				return nil, err
