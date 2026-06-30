@@ -61,7 +61,18 @@ func RunWorker(options WorkerOptions) {
 			return
 		case <-ticker.C:
 			chosen := chooser.Pick().(*ExecutableContext)
-			go chosen.StepForward(options.Index, options.StepTimeout)
+			// Execute the step synchronously: a worker walks its script's steps
+			// one at a time. Launching this in a goroutine let a slow step's
+			// successor start before numExecuted was advanced (it is incremented
+			// only after the RPC returns), so overlapping goroutines re-ran the
+			// SAME step with identical template values — duplicate concurrent
+			// writes of the same relationship, which CockroachDB rejects with
+			// WriteTooOldError (SQLSTATE 40001). It also raced on the shared
+			// numExecuted/zedToken/script fields. Concurrency is provided by
+			// running multiple workers (--qps), not by overlapping a worker with
+			// itself. If a step outlasts the interval, time.Ticker drops the
+			// missed ticks, which is honest backpressure for a load test.
+			chosen.StepForward(options.Index, options.StepTimeout)
 		}
 	}
 }
