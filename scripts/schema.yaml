@@ -1,10 +1,12 @@
 name: write basic thumper schema
 steps:
 - op: WriteSchema
-  schema: | 
+  schema: |
+    use expiration
+
     definition {{ .Prefix }}resource {
-      relation writer: {{ .Prefix }}user
-      relation reader: {{ .Prefix }}user
+      relation writer: {{ .Prefix }}user | {{ .Prefix }}user with expiration
+      relation reader: {{ .Prefix }}user | {{ .Prefix }}user with expiration
       permission edit = writer
       permission view = reader + edit
     }
@@ -12,7 +14,7 @@ steps:
     /** token represents a single token, assigned to a user or client */
     definition {{ .Prefix }}token {
       /** owner is the owner of the token */
-      relation owner: {{ .Prefix }}client | {{ .Prefix }}user
+      relation owner: {{ .Prefix }}client | {{ .Prefix }}user | {{ .Prefix }}client with expiration | {{ .Prefix }}user with expiration
       permission delete_token = owner + owner->delete_token
       permission view_token = owner + owner->view_token
     }
@@ -25,32 +27,32 @@ steps:
     */
     definition {{ .Prefix }}tenant {
       /** organization is the organization that owns the tenant */
-      relation organization: {{ .Prefix }}organization
+      relation organization: {{ .Prefix }}organization | {{ .Prefix }}organization with expiration
 
       /**
       * current_revision_hash is a link to the hash of the current schema for the tenant
       */
-      relation current_revision_hash: {{ .Prefix }}revisionhash
+      relation current_revision_hash: {{ .Prefix }}revisionhash | {{ .Prefix }}revisionhash with expiration
 
       /**
       * admin is a user or client *token* that has the admin role on the tenant
       */
-      relation admin: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+      relation admin: {{ .Prefix }}user#token | {{ .Prefix }}client#token | {{ .Prefix }}user#token with expiration | {{ .Prefix }}client#token with expiration
 
       /**
       * writer is a user or client *token* that has the writer role on the tenant
       */
-      relation writer: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+      relation writer: {{ .Prefix }}user#token | {{ .Prefix }}client#token | {{ .Prefix }}user#token with expiration | {{ .Prefix }}client#token with expiration
 
       /**
       * viewer is a user or client *token* that has the viewer role on the tenant
       */
-      relation viewer: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+      relation viewer: {{ .Prefix }}user#token | {{ .Prefix }}client#token | {{ .Prefix }}user#token with expiration | {{ .Prefix }}client#token with expiration
 
       /**
       * metrics_viewer is the client *token* that has the ability to view metrics for the tenant
       */
-      relation metrics_viewer: {{ .Prefix }}client#token
+      relation metrics_viewer: {{ .Prefix }}client#token | {{ .Prefix }}client#token with expiration
 
       // @deprecated
       permission write = writer + admin_tenant
@@ -93,22 +95,22 @@ steps:
     /** organization is an organization in the system */
     definition {{ .Prefix }}organization {
       /** platform is the singleton platform */
-      relation platform: {{ .Prefix }}platform
+      relation platform: {{ .Prefix }}platform | {{ .Prefix }}platform with expiration
 
       /**
       * prod_enabled links the organization to its own members, if creation of production tenants is allowed
       */
-      relation prod_enabled: {{ .Prefix }}organization
+      relation prod_enabled: {{ .Prefix }}organization | {{ .Prefix }}organization with expiration
 
       /**
       * admin is a user or client *token* that has the admin role on the organization
       */
-      relation admin: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+      relation admin: {{ .Prefix }}user#token | {{ .Prefix }}client#token | {{ .Prefix }}user#token with expiration | {{ .Prefix }}client#token with expiration
 
       /**
       * member is a user or client *token* that is a member of the organization
       */
-      relation member: {{ .Prefix }}user#token | {{ .Prefix }}client#token
+      relation member: {{ .Prefix }}user#token | {{ .Prefix }}client#token | {{ .Prefix }}user#token with expiration | {{ .Prefix }}client#token with expiration
 
       // Orgs
       permission admin_org = admin
@@ -141,26 +143,26 @@ steps:
     * namespace represents a single namespace defined in the schema of a tenant
     */
     definition {{ .Prefix }}namespace {
-      relation tenant: {{ .Prefix }}tenant
+      relation tenant: {{ .Prefix }}tenant | {{ .Prefix }}tenant with expiration
     }
 
     // @deprecated
     definition {{ .Prefix }}flag {
-      relation enabled: {{ .Prefix }}organization
+      relation enabled: {{ .Prefix }}organization | {{ .Prefix }}organization with expiration
     }
 
     /** user represents a user in the tenancy model */
     definition {{ .Prefix }}user {
-      relation token: {{ .Prefix }}token
+      relation token: {{ .Prefix }}token | {{ .Prefix }}token with expiration
     }
 
     /** client represents a client in the tenancy model */
     definition {{ .Prefix }}client {
       /** org is the organization that owns the client */
-      relation org: {{ .Prefix }}organization
+      relation org: {{ .Prefix }}organization | {{ .Prefix }}organization with expiration
 
       /** token is a token owned by the client */
-      relation token: {{ .Prefix }}token
+      relation token: {{ .Prefix }}token | {{ .Prefix }}token with expiration
 
       // Clients
       permission admin_client = org->admin_org
@@ -177,7 +179,7 @@ steps:
 
     /** schema represents a single schema for a tenant */
     definition {{ .Prefix }}schema {
-      relation revision: {{ .Prefix }}schemarevision
+      relation revision: {{ .Prefix }}schemarevision | {{ .Prefix }}schemarevision with expiration
     }
 - op: WriteRelationships
   updates:

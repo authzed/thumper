@@ -9,6 +9,12 @@ properties:
   weight:
     type: integer
     minimum: 1
+  recordTtl:
+    type: string
+    description: >-
+      Go duration string (e.g. "30s", "5m"). When set, every relationship
+      written by WriteRelationships steps in this script expires this long
+      after it is written.
   steps:
     type: array
     minItems: 1

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/goccy/go-yaml"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -12,6 +13,12 @@ type Script struct {
 	Name   string
 	Weight uint
 	Steps  []ScriptStep
+
+	// RecordTTL, when greater than zero, sets an expiration on every
+	// relationship written by WriteRelationships steps in this script. Each
+	// written relationship expires RecordTTL after the moment it is written.
+	// Accepts Go duration strings, e.g. "30s" or "5m".
+	RecordTTL time.Duration `yaml:"recordTtl"`
 }
 
 // ScriptStep is a single step of a thumper script, for example a single call to CheckPermissions.
