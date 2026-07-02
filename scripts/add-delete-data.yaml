@@ -1,4 +1,4 @@
-name: load some data (scattered keys)
+name: add and delete random tuples
 weight: 1
 {{- $rid := randomObjectID }}
 steps:
