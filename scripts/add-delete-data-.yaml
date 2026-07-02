@@ -1,0 +1,47 @@
+name: load some data (scattered keys)
+weight: 1
+{{- $rid := randomObjectID }}
+steps:
+{{- range $j := enumerate 100 }}
+{{- $id := sha256sum (printf "%s_%d" $rid $j) }}
+- op: WriteRelationships
+  updates:
+  - op: TOUCH
+    resource: {{ $.Prefix }}organization:org_{{ $id }}
+    subject: {{ $.Prefix }}platform:plat_{{ $id }}
+    relation: platform
+  - op: TOUCH
+    resource: {{ $.Prefix }}tenant:ps_{{ $id }}
+    subject: {{ $.Prefix }}organization:org_{{ $id }}
+    relation: organization
+  - op: TOUCH
+    resource: {{ $.Prefix }}tenant:ps_{{ $id }}
+    subject: {{ $.Prefix }}client:client_{{ $id }}#token
+    relation: writer
+{{- range $i := enumerate 10 }}
+  - op: TOUCH
+    resource: {{ $.Prefix }}client:client_{{ $id }}
+    subject: {{ $.Prefix }}token:t_{{ $id }}_{{ $i }}
+    relation: token
+{{- end }}
+- op: WriteRelationships
+  updates:
+    - op: DELETE
+      resource: {{ $.Prefix }}organization:org_{{ $id }}
+      subject: {{ $.Prefix }}platform:plat_{{ $id }}
+      relation: platform
+    - op: DELETE
+      resource: {{ $.Prefix }}tenant:ps_{{ $id }}
+      subject: {{ $.Prefix }}organization:org_{{ $id }}
+      relation: organization
+    - op: DELETE
+      resource: {{ $.Prefix }}tenant:ps_{{ $id }}
+      subject: {{ $.Prefix }}client:client_{{ $id }}#token
+      relation: writer
+  {{- range $i := enumerate 10 }}
+    - op: DELETE
+      resource: {{ $.Prefix }}client:client_{{ $id }}
+      subject: {{ $.Prefix }}token:t_{{ $id }}_{{ $i }}
+      relation: token
+  {{- end }}
+{{- end }}
