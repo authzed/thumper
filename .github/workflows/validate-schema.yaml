@@ -1,0 +1,37 @@
+---
+name: "Validate Schema"
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches: ["*"]
+  merge_group:
+    types:
+      - "checks_requested"
+jobs:
+  validate-schema:
+    name: "Validate SpiceDB Schema"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+      # scripts/schema.yaml is a thumper script whose WriteSchema step embeds
+      # the default SpiceDB schema as a Go template. Render the template with
+      # an empty prefix and extract the schema into a zed validation file,
+      # since the validate action cannot parse thumper scripts directly.
+      #
+      # NOTE: this extraction is tailored to scripts/schema.yaml: it renders
+      # only the `.Prefix` template variable and expects exactly one
+      # WriteSchema step. Other scripts (e.g. manyteams.yaml) use loop
+      # variables and would need real template rendering.
+      - name: "Extract embedded schema from scripts/schema.yaml"
+        run: |
+          sed -E 's/\{\{-? *\.Prefix *-?\}\}//g' scripts/schema.yaml > /tmp/rendered.yaml
+          count=$(yq '[.steps[] | select(.op == "WriteSchema")] | length' /tmp/rendered.yaml)
+          if [ "$count" != "1" ]; then
+            echo "::error::expected exactly one WriteSchema step in scripts/schema.yaml, found $count; update this workflow to validate all of them"
+            exit 1
+          fi
+          yq '[.steps[] | select(.op == "WriteSchema") | .schema] | .[0]' /tmp/rendered.yaml > /tmp/schema.zed
+          { echo 'schema: |'; sed 's/^/  /' /tmp/schema.zed; } > schema-validation.generated.yaml
+      - name: "Validate the extracted schema"
+        uses: "authzed/action-spicedb-validate@v1"
+        with:
+          validationfile: "schema-validation.generated.yaml"
