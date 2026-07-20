@@ -25,8 +25,9 @@ type ExecutableScript struct {
 	weight uint
 	steps  []executableStep
 
-	// source, when set, allows the script to be re-rendered from its origin
-	// file at the start of each execution cycle (see EnableRerender).
+	// source, when set, holds the parsed template so the script's random IDs
+	// can be regenerated at the start of each execution cycle (see
+	// PrepareRenderable).
 	source *scriptSource
 }
 
@@ -38,53 +39,56 @@ type ExecutableContext struct {
 	zedToken    *v1.ZedToken
 
 	// source is copied from the script when the context is created; when
-	// non-nil the script is re-rendered at the start of each cycle.
+	// non-nil the script is re-rendered (its random IDs regenerated) at the
+	// start of each cycle through its steps.
 	source *scriptSource
 }
 
-// scriptSource records where a script was loaded from so it can be re-rendered
-// (re-templated) on demand, regenerating template values such as randomObjectID.
+// scriptSource holds the once-parsed script template (with random-ID
+// placeholders intact) so the script can be cheaply re-rendered on demand:
+// resolving the placeholders to fresh random values, with no re-parsing.
 type scriptSource struct {
-	filename string
-	vars     config.ScriptVariables
-	docIndex int
+	template *config.Script
 }
 
-// load re-renders the source file and returns a freshly prepared copy of the
-// document at docIndex.
+// load resolves the template's random-ID placeholders to fresh values and
+// prepares the result for execution. It performs no file I/O, template
+// execution, or YAML parsing — only an in-memory resolve plus proto build.
 func (src *scriptSource) load() (*ExecutableScript, error) {
-	scripts, _, err := config.Load(src.filename, src.vars)
+	// Prepare returns exactly one ExecutableScript per input script.
+	prepared, err := Prepare([]*config.Script{config.ResolveScript(src.template)})
 	if err != nil {
-		return nil, fmt.Errorf("error re-loading script %s: %w", src.filename, err)
+		return nil, fmt.Errorf("error re-rendering script %s: %w", src.template.Name, err)
 	}
-
-	prepared, err := Prepare(scripts)
-	if err != nil {
-		return nil, fmt.Errorf("error re-preparing script %s: %w", src.filename, err)
-	}
-
-	if src.docIndex >= len(prepared) {
-		return nil, fmt.Errorf("script %s no longer contains document %d", src.filename, src.docIndex)
-	}
-
-	return prepared[src.docIndex], nil
+	return prepared[0], nil
 }
 
-// EnableRerender attaches a re-render source to each prepared script so that,
-// at the start of every cycle through its steps, the script is re-rendered from
-// filename. This regenerates template values (notably randomObjectID) for each
-// cycle instead of baking them in once at load time.
-func EnableRerender(scripts []*ExecutableScript, filename string, vars config.ScriptVariables) {
-	for idx, s := range scripts {
-		s.source = &scriptSource{filename: filename, vars: vars, docIndex: idx}
+// PrepareRenderable prepares scripts that use random IDs. Each returned script
+// is an initial render (its placeholders resolved to fresh values) and carries
+// its parsed template so it can be re-rendered with new random values at each
+// cycle boundary (see StepForward). Give each worker its own PrepareRenderable
+// result so workers generate independent data.
+func PrepareRenderable(templates []*config.Script) ([]*ExecutableScript, error) {
+	prepared := make([]*ExecutableScript, 0, len(templates))
+	for _, template := range templates {
+		src := &scriptSource{template: template}
+		script, err := src.load()
+		if err != nil {
+			return nil, err
+		}
+		script.source = src
+		prepared = append(prepared, script)
 	}
+	return prepared, nil
 }
 
 // StepForward advances the script one step and then stops.
 func (s *ExecutableContext) StepForward(workerIndex int, stepTimeout time.Duration) {
 	// At the start of each cycle through the script's steps, re-render the
-	// script from its source (if enabled) so template values such as
-	// randomObjectID are regenerated for this cycle.
+	// script from its source (if it uses random IDs) so those IDs are
+	// regenerated for the new cycle. This resolves placeholders in memory — no
+	// file, template, or YAML re-parsing — so it is cheap enough to do every
+	// cycle.
 	if s.source != nil && s.numExecuted%len(s.script.steps) == 0 {
 		if fresh, err := s.source.load(); err != nil {
 			log.Warn().

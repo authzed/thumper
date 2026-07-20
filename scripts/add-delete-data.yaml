@@ -1,47 +1,30 @@
 name: add and delete random tuples
 weight: 1
-{{- $rid := randomObjectID }}
+# Each worker resolves $id to a fresh, uniformly-distributed value at the start
+# of every cycle (see ResolveScript). The CREATE and DELETE steps below share it,
+# so each cycle writes one scattered entity group and then removes it. There is
+# no loop: scale the write+delete throughput with --qps (more workers) or a
+# shorter --step-interval, since every worker already generates independent,
+# fresh, scattered data each cycle.
+{{- $id := randomObjectID }}
 steps:
-{{- range $j := enumerate 100 }}
-{{- $id := sha256sum (printf "%s_%d" $rid $j) }}
 - op: WriteRelationships
   updates:
   - op: TOUCH
-    resource: {{ $.Prefix }}organization:org_{{ $id }}
-    subject: {{ $.Prefix }}platform:plat_{{ $id }}
-    relation: platform
+    resource: {{ $.Prefix }}resource:r_{{ $id }}
+    subject: {{ $.Prefix }}user:r_{{ $id }}
+    relation: reader
   - op: TOUCH
-    resource: {{ $.Prefix }}tenant:ps_{{ $id }}
-    subject: {{ $.Prefix }}organization:org_{{ $id }}
-    relation: organization
-  - op: TOUCH
-    resource: {{ $.Prefix }}tenant:ps_{{ $id }}
-    subject: {{ $.Prefix }}client:client_{{ $id }}#token
+    resource: {{ $.Prefix }}resource:r_{{ $id }}
+    subject: {{ $.Prefix }}user:w_{{ $id }}
     relation: writer
-{{- range $i := enumerate 10 }}
-  - op: TOUCH
-    resource: {{ $.Prefix }}client:client_{{ $id }}
-    subject: {{ $.Prefix }}token:t_{{ $id }}_{{ $i }}
-    relation: token
-{{- end }}
 - op: WriteRelationships
   updates:
     - op: DELETE
-      resource: {{ $.Prefix }}organization:org_{{ $id }}
-      subject: {{ $.Prefix }}platform:plat_{{ $id }}
-      relation: platform
+      resource: {{ $.Prefix }}resource:r_{{ $id }}
+      subject: {{ $.Prefix }}user:r_{{ $id }}
+      relation: reader
     - op: DELETE
-      resource: {{ $.Prefix }}tenant:ps_{{ $id }}
-      subject: {{ $.Prefix }}organization:org_{{ $id }}
-      relation: organization
-    - op: DELETE
-      resource: {{ $.Prefix }}tenant:ps_{{ $id }}
-      subject: {{ $.Prefix }}client:client_{{ $id }}#token
+      resource: {{ $.Prefix }}resource:r_{{ $id }}
+      subject: {{ $.Prefix }}user:w_{{ $id }}
       relation: writer
-  {{- range $i := enumerate 10 }}
-    - op: DELETE
-      resource: {{ $.Prefix }}client:client_{{ $id }}
-      subject: {{ $.Prefix }}token:t_{{ $id }}_{{ $i }}
-      relation: token
-  {{- end }}
-{{- end }}

@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/pprof"
 	"sync"
 	"time"
 
@@ -30,17 +32,36 @@ var (
 		cobrahttp.WithFlagPrefix("metrics"),
 		cobrahttp.WithDefaultEnabled(true),
 		cobrahttp.WithHandler(promhttp.Handler()))
+	// PProfServerBuilder serves the net/http/pprof profiling endpoints. It is
+	// disabled by default and enabled with --pprof-enabled.
+	PProfServerBuilder = cobrahttp.New("pprof",
+		cobrahttp.WithDefaultAddress(":6060"),
+		cobrahttp.WithFlagPrefix("pprof"),
+		cobrahttp.WithDefaultEnabled(false),
+		cobrahttp.WithHandler(pprofHandler()))
 )
+
+// pprofHandler returns a mux serving the standard net/http/pprof endpoints
+// under /debug/pprof/.
+func pprofHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	return mux
+}
 
 func RegisterRunFlags(cmd *cobra.Command) {
 	cmd.Flags().Int("qps", 1, "queries per second to generate")
 	cmd.Flags().Duration("step-timeout", 500*time.Millisecond, "maximum time a single step is allowed to run")
 	cmd.Flags().Duration("step-interval", time.Second, "time each worker waits between steps; lower it to drive more steps per worker (effective throughput is qps / step-interval)")
 	cmd.Flags().Bool("randomize-starting-step", false, "randomize the starting script step for each worker")
-	cmd.Flags().Bool("rerender", false, "re-render each script from its source file at the start of every cycle through its steps, regenerating template values such as randomObjectID for each cycle instead of once at startup")
 
 	// Register http flags
 	MetricsServerBuilder.RegisterFlags(cmd.Flags())
+	PProfServerBuilder.RegisterFlags(cmd.Flags())
 }
 
 var RunCmd = &cobra.Command{
@@ -66,7 +87,6 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	stepTimeout := cobrautil.MustGetDuration(cmd, "step-timeout")
 	stepInterval := cobrautil.MustGetDuration(cmd, "step-interval")
 	stepRandomization := cobrautil.MustGetBool(cmd, "randomize-starting-step")
-	rerender := cobrautil.MustGetBool(cmd, "rerender")
 	psName := cobrautil.MustGetString(cmd, "permissions-system")
 	log.Info().Int("qps", qps).Str("permission-system", psName).Msg("starting run command")
 
@@ -78,43 +98,57 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	// Keep track of the total stats for all workers
 	var scriptsForStats []*thumperconf.Script
 
-	scriptCache := make(map[string][]*thumperrunner.ExecutableScript, len(args))
+	// Parse each unique script file exactly once. Scripts that use
+	// randomObjectID keep their placeholders here; each worker resolves them to
+	// fresh values at runtime (see PrepareRenderable), so the YAML is never
+	// re-parsed no matter how long the run lasts. Static scripts are identical
+	// across workers, so they are prepared once here and shared by pointer.
+	type loadedFile struct {
+		scripts    []*thumperconf.Script
+		usedRandom bool
+		prepared   []*thumperrunner.ExecutableScript // set only for static scripts
+	}
+	files := make(map[string]loadedFile, len(args))
+	for _, scriptFilename := range args {
+		if _, ok := files[scriptFilename]; ok {
+			continue
+		}
 
-	// Load the scripts and transform them, one copy per worker
+		scripts, usedRandom, err := thumperconf.Load(scriptFilename, scriptVars)
+		if err != nil {
+			return fmt.Errorf("unable to load script file: %w", err)
+		}
+
+		loaded := loadedFile{scripts: scripts, usedRandom: usedRandom}
+		if !usedRandom {
+			if loaded.prepared, err = thumperrunner.Prepare(scripts); err != nil {
+				return fmt.Errorf("error preparing scripts for execution: %w", err)
+			}
+		}
+		files[scriptFilename] = loaded
+		scriptsForStats = append(scriptsForStats, scripts...)
+	}
+
+	// Build one set of executable scripts per worker. Scripts with random IDs
+	// get their own renderable copy per worker (so a randomized starting step
+	// can't make workers emit identical IDs during their first partial cycle);
+	// static scripts reuse the single shared Prepare result from above.
 	workerScripts := make([][]*thumperrunner.ExecutableScript, 0, qps)
 	for i := 0; i < qps; i++ {
 		var preparedScripts []*thumperrunner.ExecutableScript
 		for _, scriptFilename := range args {
-			if cached, ok := scriptCache[scriptFilename]; ok {
-				preparedScripts = append(preparedScripts, cached...)
+			loaded := files[scriptFilename]
 
-				// Skip actually loading it from disk
+			if !loaded.usedRandom {
+				preparedScripts = append(preparedScripts, loaded.prepared...)
 				continue
 			}
 
-			fileScripts, usedRandom, err := thumperconf.Load(scriptFilename, scriptVars)
-			if err != nil {
-				return fmt.Errorf("unable to load script file: %w", err)
-			}
-
-			if i == 0 {
-				scriptsForStats = append(scriptsForStats, fileScripts...)
-			}
-
-			preparedFileScripts, err := thumperrunner.Prepare(fileScripts)
+			renderable, err := thumperrunner.PrepareRenderable(loaded.scripts)
 			if err != nil {
 				return fmt.Errorf("error preparing scripts for execution: %w", err)
 			}
-
-			if rerender {
-				thumperrunner.EnableRerender(preparedFileScripts, scriptFilename, scriptVars)
-			}
-
-			if !usedRandom {
-				scriptCache[scriptFilename] = preparedFileScripts
-			}
-
-			preparedScripts = append(preparedScripts, preparedFileScripts...)
+			preparedScripts = append(preparedScripts, renderable...)
 		}
 
 		workerScripts = append(workerScripts, preparedScripts)
@@ -154,6 +188,15 @@ func runCmdFunc(cmd *cobra.Command, args []string) error {
 	go func() {
 		if err := MetricsServerBuilder.ListenFromFlags(cmd, metricsSrv); err != nil {
 			log.Fatal().Err(err).Msg("failed while serving metrics")
+		}
+	}()
+
+	// Start the pprof endpoint. Disabled by default; ListenFromFlags is a no-op
+	// unless --pprof-enabled is set.
+	pprofSrv := PProfServerBuilder.ServerFromFlags(cmd)
+	go func() {
+		if err := PProfServerBuilder.ListenFromFlags(cmd, pprofSrv); err != nil {
+			log.Fatal().Err(err).Msg("failed while serving pprof")
 		}
 	}()
 
