@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
 	"io"
 	"math/rand"
 	"os"
 	"path"
+	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ccoveille/go-safecast/v2"
@@ -18,9 +18,14 @@ import (
 
 // Load reads a script file, replaces the templated values with the values from
 // the execution environment, and then processes it as a thumper script yaml.
+//
+// randomObjectID does not bake a concrete value at load time; it emits a keyed
+// placeholder that is resolved to a fresh random value at runtime (see
+// ResolveScript). This lets a single parse be reused for every execution cycle
+// while still producing new, uniformly-distributed, correlated IDs each cycle.
+// The returned bool reports whether the script used randomObjectID at all.
 func Load(filename string, vars ScriptVariables) ([]*Script, bool, error) {
 	usedRandom := false
-	randomID := randomObjectID(64)
 
 	// Look for the file in the given path *or* in the kodata dir
 	filepath, err := findFile(filename, os.Getenv("KO_DATA_PATH"))
@@ -41,9 +46,15 @@ func Load(filename string, vars ScriptVariables) ([]*Script, bool, error) {
 			}
 			return indices
 		},
-		"randomObjectID": func() string {
+		// randomObjectID emits a placeholder keyed by its (optional) argument.
+		// Calls with the same key render to the same placeholder, so the same
+		// value can be referenced across steps (e.g. to CREATE and later DELETE
+		// the same relationship); distinct keys render to distinct placeholders.
+		// A keyless call uses a single shared key. The placeholders are resolved
+		// to concrete random values per cycle by ResolveScript.
+		"randomObjectID": func(key ...any) string {
 			usedRandom = true
-			return randomID
+			return randomIDPlaceholder(fmt.Sprint(key...))
 		},
 	}).Funcs(sprig.FuncMap())
 

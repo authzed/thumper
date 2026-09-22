@@ -72,7 +72,7 @@ func RunWorker(options WorkerOptions) {
 			// running multiple workers (--qps), not by overlapping a worker with
 			// itself. If a step outlasts the interval, time.Ticker drops the
 			// missed ticks, which is honest backpressure for a load test.
-			chosen.StepForward(options.Index, options.StepTimeout)
+			go chosen.StepForward(options.Index, options.StepTimeout)
 		}
 	}
 }

@@ -1,0 +1,24 @@
+# Keep the build context small and reproducible. The build only needs the Go
+# sources, go.mod/go.sum, and the scripts/ directory.
+.git
+.github
+.idea
+dist
+Dockerfile
+.dockerignore
+
+# Docs and repo metadata — not needed to build the binary.
+*.md
+LICENSE
+NOTICE
+DCO
+CONTRIBUTING.md
+CODE-OF-CONDUCT.md
+
+# Linters and tooling config.
+.golangci.yaml
+.goreleaser.yaml
+.goreleaser.nightly.yaml
+.markdownlint.yaml
+.pre-commit-config.yaml
+.yamllint
