@@ -72,12 +72,16 @@ weight: 30
 steps:
   - op: "CheckBulkPermissions"
     checks:
-      - resource: "{{ .Prefix }}resource:seconddoc"
-        subject: "{{ .Prefix }}user:fred"
-        permission: "reader"
       - resource: "{{ .Prefix }}resource:firstdoc"
         subject: "{{ .Prefix }}user:tom"
-        permission: "reader"
+        permission: "view"
       - resource: "{{ .Prefix }}resource:firstdoc"
         subject: "{{ .Prefix }}user:fred"
-        permission: "reader"
+        permission: "view"
+      - resource: "{{ .Prefix }}resource:firstdoc"
+        subject: "{{ .Prefix }}user:tom"
+        permission: "edit"
+      - resource: "{{ .Prefix }}resource:firstdoc"
+        subject: "{{ .Prefix }}user:fred"
+        permission: "edit"
+        expectNoPermission: true
