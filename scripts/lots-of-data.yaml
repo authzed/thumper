@@ -16,6 +16,9 @@ steps:
     resource: {{ $.Prefix }}tenant:ps_{{ $j }}
     subject: {{ $.Prefix }}client:client_{{ $j }}#token
     relation: writer
+# SpiceDB accepts at most 1000 updates per write, so the tokens go in their own write.
+- op: WriteRelationships
+  updates:
 {{- range $i := enumerate 1000 }}
   - op: TOUCH
     resource: {{ $.Prefix }}client:client_{{ $j }}
